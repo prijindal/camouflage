@@ -1,15 +1,6 @@
 import { logger } from "@repo/logger";
 import { inject } from "inversify";
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Request,
-  Route,
-  Security,
-  Tags,
-} from "tsoa";
+import { Body, Get, Path, Post, Request, Route, Security, Tags } from "tsoa";
 import { User } from "../entity/user.entity";
 import { CustomError } from "../errors/error";
 import { AuthService } from "../service/auth.service";
@@ -33,9 +24,7 @@ export class UsersController {
 
   @Post("/register")
   public async register(@Body() requestBody: UserCreationParams) {
-    const authToken = await this.authService.accessTokenCreate(
-      requestBody.username
-    );
+    const authToken = await this.authService.accessTokenCreate(requestBody.username);
     const user = await this.userService.create({
       ...requestBody,
       auth_token: authToken.encryptedToken,
@@ -58,5 +47,18 @@ export class UsersController {
   public async getMe(@Request() request: SecureRequest) {
     logger.info("Getting me");
     return request.loggedInUser;
+  }
+
+  @Get("/:username")
+  @Security("bearer")
+  public async getUser(@Path("username") username: string, @Request() request: SecureRequest) {
+    const user = await this.userService.getOne(username, "username");
+    if (user == null) {
+      throw new CustomError("User not found", 404, "User not found");
+    }
+    return {
+      username: user.username,
+      public_key: user.public_key,
+    };
   }
 }

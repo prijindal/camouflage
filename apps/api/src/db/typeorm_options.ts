@@ -49,7 +49,7 @@ const createOptions = () => {
     return {
       ...options,
       type: "better-sqlite3",
-      database: process.env.DB_PATH || "/tmp/orchestrator.db",
+      database: process.env.DB_PATH || "/tmp/camouflage.db",
     } as BetterSqlite3ConnectionOptions;
   }
 };
