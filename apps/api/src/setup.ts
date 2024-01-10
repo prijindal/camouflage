@@ -1,4 +1,4 @@
-import { logger } from "logger";
+import { logger } from "@repo/logger";
 import { TypeOrmConnection } from "./db/typeorm";
 
 import { iocContainer } from "./ioc";

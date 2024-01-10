@@ -7,10 +7,12 @@ import * as swaggerUi from "swagger-ui-express";
 import { ValidateError } from "tsoa";
 
 import { JsonWebTokenError } from "jsonwebtoken";
-import { httpLogger, logger } from "logger";
 import { RegisterRoutes } from "./build/routes";
 import swaggerDocument from "./build/swagger.json";
 import { CustomError } from "./errors/error";
+import { log } from "console";
+import { iocContainer } from "./ioc";
+import { TypeOrmConnection } from "./db/typeorm";
 
 export const app = express();
 const metricsMiddleware = promBundle({
@@ -38,7 +40,6 @@ app.use("/swagger.json", (_, res) => res.send(swaggerDocument));
 
 app.use(metricsMiddleware);
 
-app.use(httpLogger);
 RegisterRoutes(app);
 
 app.use(function errorHandler(
@@ -48,22 +49,22 @@ app.use(function errorHandler(
   next: NextFunction
 ): ExResponse | void {
   if (err instanceof ValidateError) {
-    logger.warn(`Caught Validation Error for ${req.path}:`, err.fields);
+    log(`Caught Validation Error for ${req.path}:`, err.fields);
     return res.status(422).json({
       message: "Validation Failed",
       details: err?.fields,
     });
   } else if (err instanceof JsonWebTokenError) {
-    logger.warn(`Caught ${err.name} for ${req.path}:`, err.message);
+    log(`Caught ${err.name} for ${req.path}:`, err.message);
     return res.status(422).json({
       message: err.name,
       details: err?.message,
     });
   } else if (err instanceof CustomError) {
-    logger.warn(err);
+    log(err);
     return res.status(err.status_code).json({ ...err, details: undefined });
   } else if (err instanceof Error) {
-    logger.warn(err);
+    log(err);
     return res.status(500).json({
       message: "Internal Server Error",
     });
@@ -71,3 +72,12 @@ app.use(function errorHandler(
 
   next();
 });
+
+export const shutdown = async () => {
+  const db = iocContainer.get(TypeOrmConnection).getInstance();
+  try {
+    await db?.destroy();
+  } catch (err) {
+    log(err);
+  }
+};

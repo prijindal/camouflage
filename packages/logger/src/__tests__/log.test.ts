@@ -1,10 +1,10 @@
-import { log } from "..";
+import { logger } from "..";
 
 jest.spyOn(global.console, "log");
 
 describe("@repo/logger", () => {
   it("prints a message", () => {
-    log("hello");
+    logger.info("hello");
     expect(console.log).toBeCalled();
   });
 });
