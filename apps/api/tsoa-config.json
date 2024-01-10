@@ -1,0 +1,31 @@
+{
+  "entryFile": "src/app.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "controllerPathGlobs": [
+    "src/**/*Controller.ts"
+  ],
+  "spec": {
+    "basePath": "/api",
+    "useTitleTagsForInlineObjects": true,
+    "outputDirectory": "src/build",
+    "specVersion": 3,
+    "securityDefinitions": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "swagger": {
+    "outputDirectory": ".",
+    "entryFile": "./src/app.ts"
+  },
+  "routes": {
+    "basePath": "/api",
+    "entryFile": "./src/app.ts",
+    "authenticationModule": "./src/auth/authentication.ts",
+    "routesDir": "src/build",
+    "iocModule": "src/ioc"
+  }
+}

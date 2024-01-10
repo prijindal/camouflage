@@ -1,70 +1,49 @@
-# Turborepo Docker starter
+- [ ] Requirements
 
-This is an official Docker starter Turborepo.
+- User will enter a username
+    - A new user will be created using this username with a randomly generated key as master_key
+    - hash this master_key on frontend to obtain a master_hash which get sent to the server
+    - hash this master_key in a seperate way to obtain a encryption_key which will be use to do encryption
 
-## Using this example
+- one ecdh public and private keys will be generated
+- encryption_key will be used to encrypt private key for above
+- public_key is sent to the server
 
-Run the following command:
+- once a user sends a chat to the user, they send their public key and an encrypted message
+    - this encryption is done by using ecdh of self.private_key + receiver.public_key
+    - the receiver will be able to use their private key + sender.public_key to unencrypt
 
-```sh
-npx create-turbo@latest -e with-docker
-```
 
-## What's inside?
+- on client, these things will be stored
+    - username
+    - auth token
+    - encryption_key
+    - ecdh public_keys, private_keys
+    - chat history
+        - sender username, public_key
+        - encrypted messages
 
-This turborepo uses [Yarn](https://classic.yarnpkg.com/lang/en/) as a package manager. It includes the following packages/apps:
-
-### Apps and Packages
-
-- `@repo/web`: a [Next.js](https://nextjs.org/) app
-- `@repo/api`: an [Express](https://expressjs.com/) server
-- `@repo/ui`: ui: a React component library
-- `@repo/eslint-config-custom`: `eslint` configurations for client side applications (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/eslint-config-custom-server`: `eslint` configurations for server side applications (includes `eslint-config-next` and `eslint-config-prettier`)
-- `scripts`: Jest configurations
-- `@repo/logger`: Isomorphic logger (a small wrapper around console.log)
-- `@repo/typescript-config`: tsconfig.json's used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Docker
-
-This repo is configured to be built with Docker, and Docker compose. To build all apps in this repo:
-
-```
-# Create a network, which allows containers to communicate
-# with each other, by using their container name as a hostname
-docker network create app_network
-
-# Build prod using new BuildKit engine
-COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yml build
-
-# Start prod in detached mode
-docker-compose -f docker-compose.yml up -d
-```
-
-Open http://localhost:3000.
-
-To shutdown all running containers:
-
-```
-# Stop all running containers
-docker kill $(docker ps -q) && docker rm $(docker ps -a -q)
-```
-
-### Remote Caching
-
-This example includes optional remote caching. In the Dockerfiles of the apps, uncomment the build arguments for `TURBO_TEAM` and `TURBO_TOKEN`. Then, pass these build arguments to your Docker build.
-
-You can test this behavior using a command like:
-
-`docker build -f apps/web/Dockerfile . --build-arg TURBO_TEAM=“your-team-name” --build-arg TURBO_TOKEN=“your-token“ --no-cache`
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Jest](https://jestjs.io) test runner for all things JavaScript
-- [Prettier](https://prettier.io) for code formatting
+- server side implementation
+    - /login (receive username, master_hash, public_key)
+        - creates an entry in user table with an auth token
+        - returns auth token
+    - /user/:username
+        - POST
+            - parameters: username
+            - returns that user's public_key
+            - 404 if user not found
+    - socket messages
+        - type: "chat"
+            - parameters: username, message_id, timestamp, encrypted_payload
+            - sends that encrypted_payload to username
+            - encrypted_payload: {
+                type: "text",
+                body: "Hello"
+            } or {
+                type: "image",
+                body: "base64 of image"
+            }
+        - type: "received"
+            - parameters: username, timestamp, message_id
+        - type: "read"
+            - parameters: username, timestamp, message_id
