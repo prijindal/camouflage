@@ -16,6 +16,10 @@ class ApiSocketClient {
 
   static final ApiSocketClient instance = ApiSocketClient();
 
+  void disconnect() {
+    socket?.disconnect();
+  }
+
   void connect(
     String token, {
     dynamic Function(dynamic)? onConnect,
@@ -36,10 +40,10 @@ class ApiSocketClient {
       AppLogger.instance.d('disconnect');
     });
     socket!.on('chat', (e) {
+      AppLogger.instance.d(e);
       if (onChat != null) {
-        onChat(e[0] as Map<String, dynamic>);
+        onChat(e as Map<String, dynamic>);
       }
-      AppLogger.instance.d(e[0]);
     });
   }
 }

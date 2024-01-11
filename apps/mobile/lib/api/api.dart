@@ -1,13 +1,20 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:uuid/uuid.dart';
 
 import '../encryption/key.dart';
 import '../helpers/logger.dart';
+import '../models/core.dart';
+import '../models/drift.dart';
+import '../models/message.dart';
 import '../models/payloads.dart';
 import './http.dart';
 import './socket.dart';
+
+const _uuid = Uuid();
 
 class CoreApi with ChangeNotifier {
   final storage = const FlutterSecureStorage();
@@ -106,20 +113,33 @@ class CoreApi with ChangeNotifier {
   Future<void> _onChat(Map<String, dynamic> e) async {
     if (_token == null) throw Error();
     final payload = ChatMessagePayload.fromJson(e);
-    final user = await ApiHttpClient.instance.getUser(
-      token: _token!,
-      username: payload.username,
-    );
+    await MyDatabase.instance.into(MyDatabase.instance.message).insert(
+          MessageData(
+            id: payload.messageId,
+            username: payload.username,
+            encryptedPayload: base64Decode(payload.encryptedPayload),
+            sentAt: DateTime.parse(payload.timestamp),
+            direction: MessageDirection.received,
+          ),
+        );
+  }
+
+  Future<ParsedMessage> decryptMessageData(
+    MessageData message,
+    String publicKey,
+  ) async {
     final sharedKey = await getSharedKey(
       publicKey: _publicKey!,
       privateKey: _privateKey!,
-      remotePublicKeyString: user.publicKey,
+      remotePublicKeyString: publicKey,
     );
-    final unecrypted = await decryptMessage(
+    final unencrypted = await decryptMessage(
       sharedKey,
-      payload.encryptedPayload,
+      message.encryptedPayload,
     );
-    print(unecrypted);
+    return ParsedMessage.fromJson(
+      jsonDecode(unencrypted) as Map<String, dynamic>,
+    );
   }
 
   Future<UserResponse> getUser(String username) async {
@@ -133,14 +153,19 @@ class CoreApi with ChangeNotifier {
 
   Future<UserResponse> getMe() async {
     if (_token == null) throw Error();
-    final user = await ApiHttpClient.instance.getMe(
-      token: _token!,
-    );
-    return user;
+    try {
+      final user = await ApiHttpClient.instance.getMe(
+        token: _token!,
+      );
+      return user;
+    } catch (e) {
+      await logout();
+      rethrow;
+    }
   }
 
   Future<bool> sendMessage({
-    required String payload,
+    required ParsedMessage payload,
     required String username,
     required String publicKey,
   }) async {
@@ -151,13 +176,25 @@ class CoreApi with ChangeNotifier {
       privateKey: _privateKey!,
       remotePublicKeyString: publicKey,
     );
-    final encryptedPayload = await encryptMessage(sharedKey, payload);
+    final encryptedPayload =
+        await encryptMessage(sharedKey, jsonEncode(payload.toJson()));
+    final timestamp = DateTime.now();
+    final messageId = _uuid.v4();
+    await MyDatabase.instance.into(MyDatabase.instance.message).insert(
+          MessageData(
+            id: messageId,
+            username: username,
+            encryptedPayload: encryptedPayload,
+            sentAt: timestamp,
+            direction: MessageDirection.sent,
+          ),
+        );
     return ApiHttpClient.instance.sendMessage(
       token: _token!,
       payload: ChatMessagePayload(
-        messageId: "1234",
-        encryptedPayload: encryptedPayload,
-        timestamp: DateTime.now().toIso8601String(),
+        messageId: messageId,
+        encryptedPayload: base64Encode(encryptedPayload),
+        timestamp: timestamp.toIso8601String(),
         username: username,
       ),
     );
@@ -165,14 +202,17 @@ class CoreApi with ChangeNotifier {
 
   Future<void> logout() async {
     if (_token == null) throw Error();
-    await ApiHttpClient.instance.logout(
-      token: _token!,
-    );
+    await MyDatabase.instance.message.deleteAll();
+    ApiSocketClient.instance.disconnect();
     _token = null;
     _username = null;
     _publicKey = null;
     _privateKey = null;
+    isLoading = false;
     clearSecureStorage();
     notifyListeners();
+    await ApiHttpClient.instance.logout(
+      token: _token!,
+    );
   }
 }

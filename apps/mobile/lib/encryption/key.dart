@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 
@@ -59,19 +60,19 @@ Future<SecretKey> getSharedKey({
   return sharedSecretKey;
 }
 
-Future<String> encryptMessage(SecretKey secretKey, String message) async {
+Future<Uint8List> encryptMessage(SecretKey secretKey, String message) async {
   final algorithm = AesCbc.with256bits(macAlgorithm: Hmac.sha256());
   final secretBox = await algorithm.encrypt(
     message.codeUnits,
     secretKey: secretKey,
   );
-  return base64Encode(secretBox.concatenation());
+  return secretBox.concatenation();
 }
 
-Future<String> decryptMessage(SecretKey secretKey, String payload) async {
+Future<String> decryptMessage(SecretKey secretKey, Uint8List payload) async {
   final algorithm = AesCbc.with256bits(macAlgorithm: Hmac.sha256());
   final secretBox = SecretBox.fromConcatenation(
-    base64Decode(payload),
+    payload,
     nonceLength: 16,
     macLength: algorithm.macAlgorithm.macLength,
   );

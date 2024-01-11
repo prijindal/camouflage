@@ -28,20 +28,24 @@ export class SocketService {
   instances: Record<string, UserSocketServer> = {};
 
   async newConnection(socket: Socket) {
-    const authorization = socket.handshake.auth.Authorization;
-    const user = await this.authService.authorizationVerify(authorization);
-    logger.info(`A user connected, ${user.username}`);
-    this.instances[user.username] = new UserSocketServer({ username: user.username, socket });
+    try {
+      const authorization = socket.handshake.auth.Authorization;
+      const user = await this.authService.authorizationVerify(authorization);
+      logger.info(`A user connected, ${user.username}`);
+      this.instances[user.username] = new UserSocketServer({ username: user.username, socket });
+    } catch (e) {
+      logger.error(e);
+    }
   }
 
   async sendChatMessage(from: string, message: ChatMessage) {
     const to = message.username;
     if (this.instances[to] != null) {
-      const response = await this.instances[to].socket.emitWithAck("chat", {
+      const response = this.instances[to].socket.emit("chat", {
         ...message,
         username: from,
       });
-      return true;
+      return response;
     } else {
       // Send it to a queue
       throw new Error("Username doesn't have a valid socket");

@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import './helpers/logger.dart';
 import "./models/theme.dart";
 import './pages/home.dart';
-import 'api/core.dart';
+import 'api/api.dart';
 import 'pages/loading.dart';
 import 'pages/register.dart';
 

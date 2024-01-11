@@ -1,3 +1,4 @@
+import { logger } from "@repo/logger";
 import { Request } from "express";
 import { iocContainer } from "../ioc";
 import { AuthService } from "../service/auth.service";
@@ -20,8 +21,14 @@ export async function expressAuthentication(
     }
   } else if (securityName === "bearer") {
     const authorization = request.headers.authorization;
-    (request as SecureRequest).loggedInUser = await authService.authorizationVerify(authorization);
-    return Promise.resolve({});
+    try {
+      (request as SecureRequest).loggedInUser =
+        await authService.authorizationVerify(authorization);
+      return Promise.resolve({});
+    } catch (e) {
+      logger.error(e);
+      return Promise.reject({});
+    }
   }
   return Promise.resolve({});
 }

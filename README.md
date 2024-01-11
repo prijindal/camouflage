@@ -54,4 +54,6 @@
 - on frontend
   - [x] check if server is up on app launch using health api
   - [x] check if user is valid using /me api
-  - [ ] add chat window and server websocket API to establish connection
+  - [x] add chat window and server websocket API to establish connection
+  - [ ] add frontend chat and message saving capibility
+  - [ ] create drift schema, create UIs etc

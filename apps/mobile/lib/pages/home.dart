@@ -1,26 +1,86 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
-import '../api/core.dart';
+import '../api/api.dart';
+import '../models/drift.dart';
 import './user.dart';
+import 'new_chat.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class HomePageChat {
+  final String username;
+  final DateTime lastMessageAt;
+  final int count;
 
-  @override
-  State<HomePage> createState() => _HomePageState();
+  HomePageChat({
+    required this.username,
+    required this.lastMessageAt,
+    required this.count,
+  });
 }
 
-class _HomePageState extends State<HomePage> {
-  final _usernameController = TextEditingController();
+class ChatsList extends StatefulWidget {
+  const ChatsList({super.key});
+
+  @override
+  State<ChatsList> createState() => _ChatsListState();
+}
+
+class _ChatsListState extends State<ChatsList> {
+  List<HomePageChat> _users = [];
+  StreamSubscription<List<drift.TypedResult>>? _subscription;
 
   @override
   void initState() {
     super.initState();
-    final coreApi = Provider.of<CoreApi>(context, listen: false);
-    coreApi.connect();
+    _addWatcher();
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+
+  void _addWatcher() {
+    final maxSentAtField = MyDatabase.instance.message.sentAt.max();
+    final countField = MyDatabase.instance.message.id.count();
+    final usernameField = MyDatabase.instance.message.username;
+    _subscription = (MyDatabase.instance.message.selectOnly()
+          ..addColumns([usernameField, countField, maxSentAtField])
+          ..groupBy([usernameField])
+          ..orderBy(
+            [
+              drift.OrderingTerm(
+                expression: maxSentAtField,
+                mode: drift.OrderingMode.desc,
+              )
+            ],
+          ))
+        .watch()
+        .listen((event) async {
+      final List<HomePageChat> users = [];
+      for (var element in event) {
+        final username = element.read(usernameField);
+        final count = element.read(countField);
+        final maxSentAt = element.read(maxSentAtField);
+        if (username != null && count != null && maxSentAt != null) {
+          users.add(
+            HomePageChat(
+              count: count,
+              username: username,
+              lastMessageAt: maxSentAt,
+            ),
+          );
+        }
+      }
+      setState(() {
+        _users = users;
+      });
+    });
   }
 
   Future<void> _openUserPage(String username) async {
@@ -33,35 +93,104 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: _users.length,
+      itemBuilder: (context, index) {
+        final user = _users[index];
+        return ListTile(
+          title: Text(user.username),
+          subtitle:
+              Text("Last message at ${timeago.format(user.lastMessageAt)}"),
+          trailing: Text(user.count.toString()),
+          onTap: () => _openUserPage(user.username),
+        );
+      },
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    final coreApi = Provider.of<CoreApi>(context, listen: false);
+    coreApi.connect();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final coreApi = Provider.of<CoreApi>(context);
     return Scaffold(
-      appBar: AppBar(title: Text(coreApi.username)),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            TextFormField(
-              controller: _usernameController,
-            ),
-            TextButton(
-              onPressed: () => _openUserPage(_usernameController.text),
-              child: const Text(
-                'Chat with user',
+      appBar: AppBar(
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(coreApi.username),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Icon(
+                Icons.circle,
+                size: 16,
+                color: coreApi.isConnected ? Colors.green : Colors.red,
               ),
-            ),
-            TextButton(
-              onPressed: () async {
-                await coreApi.logout();
-              },
-              child: const Text(
-                'Logout',
-              ),
-            ),
-            Text(
-              'Connection: ${coreApi.isConnected}',
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              showDialog<void>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text("Are you sure you want to logout?"),
+                  content: const Text(
+                    "All your chat will be deleted and you will not be able to login again, you will have to create a new user",
+                  ),
+                  actions: [
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        textStyle: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      child: const Text('Cancel'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        textStyle: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      child: const Text('Confirm'),
+                      onPressed: () async {
+                        final coreApi =
+                            Provider.of<CoreApi>(context, listen: false);
+                        Navigator.of(context).pop();
+                        await coreApi.logout();
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: const ChatsList(),
+      floatingActionButton: IconButton(
+        icon: const Icon(Icons.add),
+        onPressed: () {
+          MaterialPageRoute<void>(
+            builder: (context) => const NewChatPage(),
+          );
+        },
       ),
     );
   }
