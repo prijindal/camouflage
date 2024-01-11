@@ -15,9 +15,12 @@ class ApiSocketClient {
 
   static final ApiSocketClient instance = ApiSocketClient();
 
-  void connect(String token) {
+  void connect(String token, {dynamic Function(dynamic)? onConnect}) {
     initiateSocket(token);
-    socket!.onConnect((_) {
+    socket!.onConnect((e) {
+      if (onConnect != null) {
+        onConnect(e);
+      }
       AppLogger.instance.d('connect');
       socket!.emit('msg', 'test');
     });

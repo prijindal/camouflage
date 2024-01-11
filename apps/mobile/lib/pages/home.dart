@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/core.dart';
-import '../helpers/logger.dart';
+import './user.dart';
 
-class MyAppWidet extends StatefulWidget {
-  const MyAppWidet({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<MyAppWidet> createState() => _MyAppWidetState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _MyAppWidetState extends State<MyAppWidet> {
+class _HomePageState extends State<HomePage> {
+  final _usernameController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -23,19 +25,32 @@ class _MyAppWidetState extends State<MyAppWidet> {
   Widget build(BuildContext context) {
     final coreApi = Provider.of<CoreApi>(context);
     return Scaffold(
+      appBar: AppBar(title: Text(coreApi.username)),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            TextButton(
-              onPressed: () async {
-                final username = "prijindal";
-                final user = await coreApi.getUser(username);
-                AppLogger.instance.d(user.username);
-                AppLogger.instance.d(user.publicKey);
+            TextFormField(
+              controller: _usernameController,
+              onChanged: (value) {
+                setState(() {
+                  _usernameController.text = value;
+                });
               },
+            ),
+            TextButton(
+              onPressed: _usernameController.text.isEmpty
+                  ? null
+                  : () async {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (context) =>
+                              UserPage(username: _usernameController.text),
+                        ),
+                      );
+                    },
               child: const Text(
-                'Get User',
+                'Chat with user',
               ),
             ),
             TextButton(
@@ -46,46 +61,8 @@ class _MyAppWidetState extends State<MyAppWidet> {
                 'Logout',
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final coreApi = Provider.of<CoreApi>(context);
-    if (coreApi.isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: Text("Loading..."),
-        ),
-      );
-    }
-    if (coreApi.isLoggedIn) {
-      return const MyAppWidet();
-    }
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text("Login"),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            TextButton(
-              onPressed: () async {
-                final username = "prijindal";
-                await coreApi.register(username);
-              },
-              child: const Text(
-                'Register',
-              ),
+            Text(
+              'Connection: ${coreApi.isConnected}',
             ),
           ],
         ),

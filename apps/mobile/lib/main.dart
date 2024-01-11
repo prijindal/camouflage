@@ -5,6 +5,8 @@ import './helpers/logger.dart';
 import "./models/theme.dart";
 import './pages/home.dart';
 import 'api/core.dart';
+import 'pages/loading.dart';
+import 'pages/register.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,12 +37,17 @@ class MyMaterialApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeModeNotifier>(context);
+    final coreApi = Provider.of<CoreApi>(context);
     AppLogger.instance.d("Building MyApp");
     return MaterialApp(
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
       darkTheme: ThemeData.dark(useMaterial3: true),
       themeMode: themeNotifier.getTheme(),
-      home: const MyHomePage(),
+      home: coreApi.isLoading
+          ? const LoadingPage()
+          : !coreApi.isLoggedIn
+              ? const RegisterPage()
+              : const HomePage(),
     );
   }
 }

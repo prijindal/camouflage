@@ -28,6 +28,15 @@ class ApiHttpClient {
 
   static final ApiHttpClient instance = ApiHttpClient();
 
+  Future<void> health() async {
+    try {
+      await dio.get<dynamic>("/api/health");
+    } on DioException catch (e) {
+      AppLogger.instance.e(e.response);
+      rethrow;
+    }
+  }
+
   Future<RegisterResponse> register({
     required String username,
     required String master_hash,
@@ -59,6 +68,28 @@ class ApiHttpClient {
     try {
       final response = await dio.get<dynamic>(
         "/api/users/$username",
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+          },
+        ),
+      );
+      return UserResponse(
+        username: response.data["username"] as String,
+        publicKey: response.data["public_key"] as String,
+      );
+    } on DioException catch (e) {
+      AppLogger.instance.e(e.response);
+      rethrow;
+    }
+  }
+
+  Future<UserResponse> getMe({
+    required String token,
+  }) async {
+    try {
+      final response = await dio.get<dynamic>(
+        "/api/users/me",
         options: Options(
           headers: {
             "Authorization": "Bearer $token",

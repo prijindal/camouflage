@@ -12,37 +12,58 @@ import './socket.dart';
 class CoreApi with ChangeNotifier {
   final storage = const FlutterSecureStorage();
   bool isLoading = false;
+  bool isConnected = false;
   String? _token;
   String? _username;
   String? _publicKey;
   String? _privateKey;
 
   CoreApi() {
-    readFromSecureStorage();
+    init();
+  }
+
+  String get username {
+    if (_username == null) {
+      AppLogger.instance.e("Username not found");
+      throw Error();
+    }
+    return _username!;
+  }
+
+  Future<void> init() async {
+    isLoading = true;
+    notifyListeners();
+    // Check if server is up
+    await ApiHttpClient.instance.health();
+    await readFromSecureStorage();
+    if (isLoggedIn) {
+      final user = await getMe();
+      if (user.username != _username) {
+        clearSecureStorage();
+      }
+    }
+    isLoading = false;
+    notifyListeners();
   }
 
   Future<void> readFromSecureStorage() async {
-    isLoading = true;
-    notifyListeners();
     _token = await storage.read(key: "token");
     _username = await storage.read(key: "username");
     _publicKey = await storage.read(key: "publicKey");
     _privateKey = await storage.read(key: "privateKey");
     AppLogger.instance.d("Read from secure storage: $_token");
-    isLoading = false;
-    notifyListeners();
+  }
+
+  Future<void> clearSecureStorage() async {
+    await storage.deleteAll();
   }
 
   Future<void> writeToSecureStorage() async {
-    isLoading = true;
-    notifyListeners();
     await storage.write(key: "token", value: _token);
     await storage.write(key: "username", value: _username);
     await storage.write(key: "publicKey", value: _publicKey);
     await storage.write(key: "privateKey", value: _privateKey);
     AppLogger.instance.d("Written to secure storage: $_token");
-    isLoading = false;
-    notifyListeners();
   }
 
   bool get isLoggedIn => _token != null;
@@ -65,16 +86,28 @@ class CoreApi with ChangeNotifier {
     _username = response.username;
     _privateKey = base64Encode(privateKeyBytes);
     writeToSecureStorage();
+    notifyListeners();
   }
 
   void connect() {
-    ApiSocketClient.instance.connect(_token!);
+    ApiSocketClient.instance.connect(_token!, onConnect: (_) {
+      isConnected = true;
+      notifyListeners();
+    });
   }
 
   Future<UserResponse> getUser(String username) async {
     if (_token == null) throw Error();
     final user = await ApiHttpClient.instance.getUser(
       username: username,
+      token: _token!,
+    );
+    return user;
+  }
+
+  Future<UserResponse> getMe() async {
+    if (_token == null) throw Error();
+    final user = await ApiHttpClient.instance.getMe(
       token: _token!,
     );
     return user;
@@ -89,6 +122,7 @@ class CoreApi with ChangeNotifier {
     _username = null;
     _publicKey = null;
     _privateKey = null;
-    writeToSecureStorage();
+    clearSecureStorage();
+    notifyListeners();
   }
 }
