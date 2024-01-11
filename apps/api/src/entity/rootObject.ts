@@ -1,9 +1,4 @@
-import {
-  CreateDateColumn,
-  DeleteDateColumn,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from "typeorm";
+import { CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { dateColumnOptions } from "./typeHelpers";
 
 export abstract class RootObject {
@@ -15,7 +10,4 @@ export abstract class RootObject {
 
   @UpdateDateColumn(dateColumnOptions())
   updated_at: Date;
-
-  @DeleteDateColumn(dateColumnOptions({ nullable: true }))
-  deleted_at?: Date;
 }

@@ -2,7 +2,12 @@
 import { logger } from "@repo/logger";
 import http from "http";
 import SocketIO from "socket.io";
+// SocketService must be imported before app
+import { SocketService } from "./service/socket.service";
+
 import { app, shutdown } from "./app";
+
+import { iocContainer } from "./ioc";
 import { setup } from "./setup";
 
 const port = process.env.PORT || 3000;
@@ -15,7 +20,7 @@ const listener = server.listen(port, () =>
 );
 
 io.on("connection", socket => {
-  logger.info("A user connected");
+  iocContainer.get<SocketService>(SocketService).newConnection(socket);
 });
 
 const close = async () => {

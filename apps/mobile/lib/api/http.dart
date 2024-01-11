@@ -2,6 +2,8 @@ import "dart:convert";
 
 import "package:dio/dio.dart";
 
+import "../helpers/logger.dart";
+
 class RegisterResponse {
   String username;
   String token;
@@ -32,7 +34,7 @@ class ApiHttpClient {
     required String public_key,
   }) async {
     try {
-      final response = await dio.post(
+      final response = await dio.post<dynamic>(
         "/api/users/register",
         data: jsonEncode({
           "username": username,
@@ -41,11 +43,11 @@ class ApiHttpClient {
         }),
       );
       return RegisterResponse(
-        username: response.data["username"],
-        token: response.data["token"],
+        username: response.data["username"] as String,
+        token: response.data["token"] as String,
       );
     } on DioException catch (e) {
-      print(e.response);
+      AppLogger.instance.e(e.response);
       rethrow;
     }
   }
@@ -55,7 +57,7 @@ class ApiHttpClient {
     required String token,
   }) async {
     try {
-      final response = await dio.get(
+      final response = await dio.get<dynamic>(
         "/api/users/$username",
         options: Options(
           headers: {
@@ -64,11 +66,29 @@ class ApiHttpClient {
         ),
       );
       return UserResponse(
-        username: response.data["username"],
-        publicKey: response.data["public_key"],
+        username: response.data["username"] as String,
+        publicKey: response.data["public_key"] as String,
       );
     } on DioException catch (e) {
-      print(e.response);
+      AppLogger.instance.e(e.response);
+      rethrow;
+    }
+  }
+
+  Future<void> logout({
+    required String token,
+  }) async {
+    try {
+      await dio.get<dynamic>(
+        "/api/users/logout",
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+          },
+        ),
+      );
+    } on DioException catch (e) {
+      AppLogger.instance.e(e.response);
       rethrow;
     }
   }

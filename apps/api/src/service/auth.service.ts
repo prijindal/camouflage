@@ -1,17 +1,16 @@
+import { logger } from "@repo/logger";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { inject } from "inversify";
 import { provide } from "inversify-binding-decorators";
 import jwt from "jsonwebtoken";
-import { UserAuthenticationError } from "../errors/auth";
-import { logger } from "@repo/logger";
-import { UserService } from "../service/user.service";
-import { CacheService } from "./cache.service";
 import { isEmpty } from "lodash";
+import { UserAuthenticationError } from "../errors/auth";
+import { UserService } from "../service/user.service";
 import { AuthUser } from "../types/auth_user";
+import { CacheService } from "./cache.service";
 
-const JWT_SECRET =
-  process.env["JWT_SECRET"] || "bb22aeb9-a90f-4c06-bf03-0057bcd1429f";
+const JWT_SECRET = process.env["JWT_SECRET"] || "bb22aeb9-a90f-4c06-bf03-0057bcd1429f";
 
 type AuthJwtPayload = {
   username: string;
@@ -30,14 +29,21 @@ export class AuthService {
     const encryptedToken = bcrypt.hashSync(token, 10);
     return {
       encryptedToken,
-      token: jwt.sign({ username: username, token: token }, JWT_SECRET, {
-        expiresIn: "24h",
-      }),
+      token: jwt.sign({ username: username, token: token }, JWT_SECRET),
     };
   };
 
+  authorizationVerify = async (authorization: string | undefined) => {
+    if (authorization == null || !authorization.startsWith("Bearer ")) {
+      return Promise.reject({ status: "No token found" });
+    }
+    const jwtToken = authorization.split("Bearer ")[1];
+    const userInfo = await this.accessTokenVerify(jwtToken);
+    return userInfo;
+  };
+
   // Returns user token
-  accessTokenVerify = async (token: string): Promise<AuthUser> => {
+  private accessTokenVerify = async (token: string): Promise<AuthUser> => {
     const cacheKey = `access_token_${token}`;
     const user = this.cacheService.get<AuthUser>(cacheKey);
     if (user != null && !isEmpty(user)) {
@@ -45,17 +51,10 @@ export class AuthService {
       return user;
     }
     const payload = jwt.verify(token, JWT_SECRET) as string | AuthJwtPayload;
-    if (
-      typeof payload == "string" ||
-      payload.username == null ||
-      payload.token == null
-    ) {
+    if (typeof payload == "string" || payload.username == null || payload.token == null) {
       throw new UserAuthenticationError(token, "Invalid JWT");
     }
-    const savedUser = await this.userService.getOne(
-      payload.username,
-      "username"
-    );
+    const savedUser = await this.userService.getOne(payload.username, "username");
     if (savedUser == null) {
       throw new UserAuthenticationError(payload.username, "Token not found");
     }

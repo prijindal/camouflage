@@ -49,6 +49,14 @@ export class UsersController {
     return request.loggedInUser;
   }
 
+  @Get("/logout")
+  @Security("bearer")
+  public async logout(@Request() request: SecureRequest) {
+    await this.userService.delete(request.loggedInUser.id);
+    logger.info("Getting me");
+    return request.loggedInUser;
+  }
+
   @Get("/:username")
   @Security("bearer")
   public async getUser(@Path("username") username: string, @Request() request: SecureRequest) {

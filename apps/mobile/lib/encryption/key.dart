@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:cryptography/cryptography.dart';
 
-import './constants.dart';
+import '../helpers/constants.dart';
 
 Future<String> getMasterHash(String username, String master_key) async {
   final pbkdf2 = Pbkdf2(
@@ -12,8 +12,8 @@ Future<String> getMasterHash(String username, String master_key) async {
     bits: HASH_LENGTH,
   );
 
-  final secretKey = SecretKey(Utf8Encoder().convert(username));
-  final salt = Utf8Encoder().convert(master_key);
+  final secretKey = SecretKey(const Utf8Encoder().convert(username));
+  final salt = const Utf8Encoder().convert(master_key);
 
   final newSecretKey =
       await pbkdf2.deriveKey(secretKey: secretKey, nonce: salt);

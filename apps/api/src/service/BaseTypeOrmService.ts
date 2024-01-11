@@ -20,20 +20,14 @@ export type GroupByReturnType<K extends string> = {
   count: number;
 };
 
-export type RootFilter<T extends RootObject> = Partial<
-  Omit<T, "created_at">
-> & {
+export type RootFilter<T extends RootObject> = Partial<Omit<T, "created_at">> & {
   created_at?: {
     lte?: Date;
     gte?: Date;
   };
 };
 
-function durationMetrics(
-  _: any,
-  propertyKey: string | symbol,
-  descriptor: PropertyDescriptor
-) {
+function durationMetrics(_: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
   const original = descriptor.value;
   descriptor.value = async function (...props: any) {
     const selfClass = this as any;
@@ -74,7 +68,7 @@ export abstract class BaseTypeOrmService<T extends RootObject> {
     const query = this.model.createQueryBuilder().where(filter);
     if (Object.keys(textSearch).length > 0) {
       query.andWhere(
-        new Brackets((qb) => {
+        new Brackets(qb => {
           for (const field in textSearch) {
             if (textSearch[field]) {
               const fieldQuery = `to_tsvector(${field}) @@ to_tsquery(:${field})`;
@@ -128,9 +122,7 @@ export abstract class BaseTypeOrmService<T extends RootObject> {
     return await this.model.findOneBy(query);
   }
 
-  async create(
-    newResource: Omit<T, "id" | "created_at" | "updated_at">
-  ): Promise<T> {
+  async create(newResource: Omit<T, "id" | "created_at" | "updated_at">): Promise<T> {
     const saved = await this.model.save(newResource as T);
     this.prometheusClient.DBInsertCounter.labels({
       collection: this.model.metadata.tableName,
@@ -139,9 +131,7 @@ export abstract class BaseTypeOrmService<T extends RootObject> {
     return saved;
   }
 
-  async insert(
-    newResources: Omit<T, "id" | "created_at" | "updated_at">[]
-  ): Promise<T[]> {
+  async insert(newResources: Omit<T, "id" | "created_at" | "updated_at">[]): Promise<T[]> {
     const saved = await this.model.save(newResources as T[]);
     this.prometheusClient.DBInsertCounter.labels({
       collection: this.model.metadata.tableName,
@@ -150,33 +140,21 @@ export abstract class BaseTypeOrmService<T extends RootObject> {
     return saved;
   }
 
-  async update(
-    filter: FindOptionsWhere<T>,
-    updatedResource: QueryDeepPartialEntity<T>
-  ) {
+  async update(filter: FindOptionsWhere<T>, updatedResource: QueryDeepPartialEntity<T>) {
     const updated = await this.model.update(filter, updatedResource);
     return updated.affected;
   }
 
   async delete(id: string) {
-    return await this.model.softDelete({ id: id as any });
+    return await this.model.delete({ id: id as any });
   }
 
-  async deleteMany(filter: FindOptionsWhere<T>, softDelete = true) {
-    if (softDelete) {
-      const deleteResult = await this.model.softDelete(filter);
-      return deleteResult;
-    } else {
-      const deleteResult = await this.model.delete(filter);
-      return deleteResult;
-    }
+  async deleteMany(filter: FindOptionsWhere<T>) {
+    const deleteResult = await this.model.delete(filter);
+    return deleteResult;
   }
 
-  getRawMany(
-    groupBy: string[],
-    filter: FindOptionsWhere<T> = {},
-    select: string[] = groupBy
-  ) {
+  getRawMany(groupBy: string[], filter: FindOptionsWhere<T> = {}, select: string[] = groupBy) {
     return this.groupByQueryBuilder(groupBy, filter, select).getRawMany();
   }
 
@@ -189,7 +167,7 @@ export abstract class BaseTypeOrmService<T extends RootObject> {
       .createQueryBuilder()
       .select([...select, "count(*) as count"])
       .where(filter);
-    groupBy.forEach((group) => {
+    groupBy.forEach(group => {
       query.addGroupBy(group);
     });
     return query;
