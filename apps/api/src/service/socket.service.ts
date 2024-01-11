@@ -6,8 +6,20 @@ import { Socket } from "socket.io";
 import { singleton } from "../singleton";
 import { AuthService } from "./auth.service";
 
+type ChatMessage = {
+  username: string;
+  message_id: string;
+  timestamp: string;
+  encrypted_payload: string;
+};
+
 class UserSocketServer {
-  constructor({}: { username: string }) {}
+  username: string;
+  socket: Socket;
+  constructor({ username, socket }: { username: string; socket: Socket }) {
+    this.username = username;
+    this.socket = socket;
+  }
 }
 
 @singleton(SocketService)
@@ -19,6 +31,20 @@ export class SocketService {
     const authorization = socket.handshake.auth.Authorization;
     const user = await this.authService.authorizationVerify(authorization);
     logger.info(`A user connected, ${user.username}`);
-    this.instances[user.username] = new UserSocketServer({ username: user.username });
+    this.instances[user.username] = new UserSocketServer({ username: user.username, socket });
+  }
+
+  async sendChatMessage(from: string, message: ChatMessage) {
+    const to = message.username;
+    if (this.instances[to] != null) {
+      const response = await this.instances[to].socket.emitWithAck("chat", {
+        ...message,
+        username: from,
+      });
+      return true;
+    } else {
+      // Send it to a queue
+      throw new Error("Username doesn't have a valid socket");
+    }
   }
 }

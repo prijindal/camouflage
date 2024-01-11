@@ -1,5 +1,6 @@
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
+import '../helpers/constants.dart';
 import '../helpers/logger.dart';
 
 class ApiSocketClient {
@@ -7,7 +8,7 @@ class ApiSocketClient {
 
   void initiateSocket(String token) {
     socket = IO.io(
-      'http://localhost:3000',
+      baseUrl,
       IO.OptionBuilder().setTransports(['websocket']).setAuth(
           {"Authorization": "Bearer $token"}).build(),
     );
@@ -15,17 +16,30 @@ class ApiSocketClient {
 
   static final ApiSocketClient instance = ApiSocketClient();
 
-  void connect(String token, {dynamic Function(dynamic)? onConnect}) {
+  void connect(
+    String token, {
+    dynamic Function(dynamic)? onConnect,
+    dynamic Function(dynamic)? onDisconnect,
+    dynamic Function(Map<String, dynamic>)? onChat,
+  }) {
     initiateSocket(token);
     socket!.onConnect((e) {
       if (onConnect != null) {
         onConnect(e);
       }
       AppLogger.instance.d('connect');
-      socket!.emit('msg', 'test');
     });
-    socket!.on('event', (data) => AppLogger.instance.d(data));
-    socket!.onDisconnect((_) => AppLogger.instance.d('disconnect'));
-    socket!.on('fromServer', (_) => AppLogger.instance.d(_));
+    socket!.onDisconnect((e) {
+      if (onDisconnect != null) {
+        onDisconnect(e);
+      }
+      AppLogger.instance.d('disconnect');
+    });
+    socket!.on('chat', (e) {
+      if (onChat != null) {
+        onChat(e[0] as Map<String, dynamic>);
+      }
+      AppLogger.instance.d(e[0]);
+    });
   }
 }

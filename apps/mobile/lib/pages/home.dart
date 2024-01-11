@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +23,14 @@ class _HomePageState extends State<HomePage> {
     coreApi.connect();
   }
 
+  Future<void> _openUserPage(String username) async {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => UserPage(username: username),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final coreApi = Provider.of<CoreApi>(context);
@@ -32,23 +42,9 @@ class _HomePageState extends State<HomePage> {
           children: <Widget>[
             TextFormField(
               controller: _usernameController,
-              onChanged: (value) {
-                setState(() {
-                  _usernameController.text = value;
-                });
-              },
             ),
             TextButton(
-              onPressed: _usernameController.text.isEmpty
-                  ? null
-                  : () async {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (context) =>
-                              UserPage(username: _usernameController.text),
-                        ),
-                      );
-                    },
+              onPressed: () => _openUserPage(_usernameController.text),
               child: const Text(
                 'Chat with user',
               ),

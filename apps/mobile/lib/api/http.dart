@@ -2,7 +2,9 @@ import "dart:convert";
 
 import "package:dio/dio.dart";
 
+import "../helpers/constants.dart";
 import "../helpers/logger.dart";
+import "../models/payloads.dart";
 
 class RegisterResponse {
   String username;
@@ -20,7 +22,7 @@ class UserResponse {
 
 class ApiHttpClient {
   final dio = Dio(BaseOptions(
-    baseUrl: "http://localhost:3000",
+    baseUrl: baseUrl,
     headers: {
       "Content-Type": "application/json",
     },
@@ -100,6 +102,27 @@ class ApiHttpClient {
         username: response.data["username"] as String,
         publicKey: response.data["public_key"] as String,
       );
+    } on DioException catch (e) {
+      AppLogger.instance.e(e.response);
+      rethrow;
+    }
+  }
+
+  Future<bool> sendMessage({
+    required String token,
+    required ChatMessagePayload payload,
+  }) async {
+    try {
+      final response = await dio.post<bool>(
+        "/api/chat/message",
+        data: payload.toJson(),
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+          },
+        ),
+      );
+      return response.data ?? false;
     } on DioException catch (e) {
       AppLogger.instance.e(e.response);
       rethrow;

@@ -27,18 +27,11 @@ class _RegisterPageState extends State<RegisterPage> {
           children: <Widget>[
             TextFormField(
               controller: _usernameController,
-              onChanged: (value) {
-                setState(() {
-                  _usernameController.text = value;
-                });
-              },
             ),
             TextButton(
-              onPressed: _usernameController.text.isEmpty
-                  ? null
-                  : () async {
-                      await coreApi.register(_usernameController.text);
-                    },
+              onPressed: () async {
+                await coreApi.register(_usernameController.text);
+              },
               child: const Text(
                 'Register',
               ),

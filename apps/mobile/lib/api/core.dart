@@ -1,11 +1,11 @@
 import 'dart:convert';
 
-import 'package:cryptography/cryptography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../encryption/key.dart';
 import '../helpers/logger.dart';
+import '../models/payloads.dart';
 import './http.dart';
 import './socket.dart';
 
@@ -71,8 +71,7 @@ class CoreApi with ChangeNotifier {
   Future<void> register(String username) async {
     final masterKey = generateMasterKey();
     final masterHash = await getMasterHash(username, masterKey);
-    final algorithm = X25519();
-    final keyPair = await algorithm.newKeyPair();
+    final keyPair = await newKeyPair();
     final privateKeyBytes = await keyPair.extractPrivateKeyBytes();
     final publicKey = await keyPair.extractPublicKey();
     _publicKey = base64Encode(publicKey.bytes);
@@ -90,10 +89,37 @@ class CoreApi with ChangeNotifier {
   }
 
   void connect() {
-    ApiSocketClient.instance.connect(_token!, onConnect: (_) {
-      isConnected = true;
-      notifyListeners();
-    });
+    ApiSocketClient.instance.connect(
+      _token!,
+      onConnect: (_) {
+        isConnected = true;
+        notifyListeners();
+      },
+      onDisconnect: (_) {
+        isConnected = false;
+        notifyListeners();
+      },
+      onChat: _onChat,
+    );
+  }
+
+  Future<void> _onChat(Map<String, dynamic> e) async {
+    if (_token == null) throw Error();
+    final payload = ChatMessagePayload.fromJson(e);
+    final user = await ApiHttpClient.instance.getUser(
+      token: _token!,
+      username: payload.username,
+    );
+    final sharedKey = await getSharedKey(
+      publicKey: _publicKey!,
+      privateKey: _privateKey!,
+      remotePublicKeyString: user.publicKey,
+    );
+    final unecrypted = await decryptMessage(
+      sharedKey,
+      payload.encryptedPayload,
+    );
+    print(unecrypted);
   }
 
   Future<UserResponse> getUser(String username) async {
@@ -111,6 +137,30 @@ class CoreApi with ChangeNotifier {
       token: _token!,
     );
     return user;
+  }
+
+  Future<bool> sendMessage({
+    required String payload,
+    required String username,
+    required String publicKey,
+  }) async {
+    if (_token == null || _publicKey == null || _privateKey == null)
+      throw Error();
+    final sharedKey = await getSharedKey(
+      publicKey: _publicKey!,
+      privateKey: _privateKey!,
+      remotePublicKeyString: publicKey,
+    );
+    final encryptedPayload = await encryptMessage(sharedKey, payload);
+    return ApiHttpClient.instance.sendMessage(
+      token: _token!,
+      payload: ChatMessagePayload(
+        messageId: "1234",
+        encryptedPayload: encryptedPayload,
+        timestamp: DateTime.now().toIso8601String(),
+        username: username,
+      ),
+    );
   }
 
   Future<void> logout() async {
