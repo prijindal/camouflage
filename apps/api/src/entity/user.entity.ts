@@ -5,7 +5,7 @@ import { RootObject } from "./rootObject";
   name: "users",
 })
 export class User extends RootObject {
-  @Column({unique: true})
+  @Column({ unique: true })
   public username: string;
 
   @Column()
@@ -16,4 +16,7 @@ export class User extends RootObject {
 
   @Column({})
   public public_key: string;
+
+  @Column({ nullable: true })
+  public notificationToken?: string;
 }

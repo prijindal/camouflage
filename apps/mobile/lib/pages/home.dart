@@ -1,11 +1,15 @@
 import 'dart:async';
 
+import 'package:app_settings/app_settings.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../api/api.dart';
+import '../helpers/firebase.dart';
+import '../helpers/logger.dart';
 import '../models/drift.dart';
 import './user.dart';
 import 'new_chat.dart';
@@ -99,8 +103,7 @@ class _ChatsListState extends State<ChatsList> {
         final user = _users[index];
         return ListTile(
           title: Text(user.username),
-          subtitle:
-              Text("Last message at ${timeago.format(user.lastMessageAt)}"),
+          subtitle: Text("Last message ${timeago.format(user.lastMessageAt)}"),
           trailing: Text(user.count.toString()),
           onTap: () => _openUserPage(user.username),
         );
@@ -122,6 +125,49 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     final coreApi = Provider.of<CoreApi>(context, listen: false);
     coreApi.connect();
+    _registerNotificationPermissions();
+  }
+
+  Future<void> _registerNotificationPermissions() async {
+    if (!isFirebaseInitialized()) return;
+    final permission = await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+    if (permission.authorizationStatus != AuthorizationStatus.authorized) {
+      final scaffoldMessenger = ScaffoldMessenger.of(context);
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Text(
+                "Notifications permission not granted",
+              ),
+              IconButton(
+                onPressed: () async {
+                  await AppSettings.openAppSettings(
+                    type: AppSettingsType.notification,
+                  );
+                },
+                icon: const Icon(Icons.settings),
+              ),
+            ],
+          ),
+        ),
+      );
+      return;
+    }
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token != null) {
+      final coreApi = Provider.of<CoreApi>(context, listen: false);
+      await coreApi.registerNotifications(notificationToken: token);
+      AppLogger.instance.d("Registered notification successfully");
+    }
   }
 
   @override
@@ -187,9 +233,9 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: IconButton(
         icon: const Icon(Icons.add),
         onPressed: () {
-          MaterialPageRoute<void>(
+          Navigator.of(context).push(MaterialPageRoute<void>(
             builder: (context) => const NewChatPage(),
-          );
+          ));
         },
       ),
     );

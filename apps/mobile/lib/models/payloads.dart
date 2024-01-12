@@ -13,12 +13,14 @@ class ChatMessagePayload {
 
   // Convert the object to a JSON representation
   Map<String, dynamic> toJson() {
-    return {
+    final Map<String, dynamic> json = {
       'message_id': messageId,
       'encrypted_payload': encryptedPayload,
       'timestamp': timestamp,
       'username': username,
     };
+
+    return json;
   }
 
   // Create an object from a JSON representation

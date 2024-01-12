@@ -37,7 +37,15 @@ class _ChatMessagesListState extends State<ChatMessagesList> {
 
   void _addWatcher() {
     _subscription = (MyDatabase.instance.message.select()
-          ..where((tbl) => tbl.username.equals(widget.user.username)))
+          ..where((tbl) => tbl.username.equals(widget.user.username))
+          ..orderBy(
+            [
+              (u) => drift.OrderingTerm(
+                    expression: u.sentAt,
+                    mode: drift.OrderingMode.desc,
+                  )
+            ],
+          ))
         .watch()
         .listen((event) async {
       final coreApi = Provider.of<CoreApi>(context, listen: false);
@@ -67,6 +75,7 @@ class _ChatMessagesListState extends State<ChatMessagesList> {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
+      reverse: true,
       shrinkWrap: true,
       itemCount: _messages.length,
       itemBuilder: (context, index) {

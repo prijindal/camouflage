@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
@@ -16,8 +17,55 @@ import './socket.dart';
 
 const _uuid = Uuid();
 
+Future<ChatMessagePayload> onChatHandler(Map<String, dynamic> e) async {
+  final payload = ChatMessagePayload.fromJson(e);
+  try {
+    await MyDatabase.instance.into(MyDatabase.instance.message).insert(
+          MessageData(
+            id: payload.messageId,
+            username: payload.username,
+            encryptedPayload: base64Decode(payload.encryptedPayload),
+            sentAt: DateTime.parse(payload.timestamp),
+            direction: MessageDirection.received,
+          ),
+        );
+  } on SqliteException catch (e) {
+    AppLogger.instance.e(e);
+  }
+  return payload;
+}
+
+Future<ParsedMessage> decryptMessageDataHandler({
+  required Uint8List encryptedPayload,
+  required String remotePublicKey,
+  required String publicKey,
+  required String privateKey,
+}) async {
+  final sharedKey = await getSharedKey(
+    publicKey: publicKey,
+    privateKey: privateKey,
+    remotePublicKeyString: remotePublicKey,
+  );
+  final unencrypted = await decryptMessage(
+    sharedKey,
+    encryptedPayload,
+  );
+  return ParsedMessage.fromJson(
+    jsonDecode(unencrypted) as Map<String, dynamic>,
+  );
+}
+
+const flutterSecureStorage = FlutterSecureStorage();
+
+Future<String?> getCachedPublicKey(String username) async {
+  final key = "public_key_$username";
+  final userPublicKey = await flutterSecureStorage.read(key: key);
+  return userPublicKey;
+}
+
 class CoreApi with ChangeNotifier {
-  final storage = const FlutterSecureStorage();
+  ApiSocketClient? socketClient;
+  final httpClient = ApiHttpClient();
   bool isLoading = false;
   bool isConnected = false;
   String? _token;
@@ -41,7 +89,7 @@ class CoreApi with ChangeNotifier {
     isLoading = true;
     notifyListeners();
     // Check if server is up
-    await ApiHttpClient.instance.health();
+    await httpClient.health();
     await readFromSecureStorage();
     if (isLoggedIn) {
       final user = await getMe();
@@ -54,22 +102,22 @@ class CoreApi with ChangeNotifier {
   }
 
   Future<void> readFromSecureStorage() async {
-    _token = await storage.read(key: "token");
-    _username = await storage.read(key: "username");
-    _publicKey = await storage.read(key: "publicKey");
-    _privateKey = await storage.read(key: "privateKey");
+    _token = await flutterSecureStorage.read(key: "token");
+    _username = await flutterSecureStorage.read(key: "username");
+    _publicKey = await flutterSecureStorage.read(key: "publicKey");
+    _privateKey = await flutterSecureStorage.read(key: "privateKey");
     AppLogger.instance.d("Read from secure storage: $_token");
   }
 
   Future<void> clearSecureStorage() async {
-    await storage.deleteAll();
+    await flutterSecureStorage.deleteAll();
   }
 
   Future<void> writeToSecureStorage() async {
-    await storage.write(key: "token", value: _token);
-    await storage.write(key: "username", value: _username);
-    await storage.write(key: "publicKey", value: _publicKey);
-    await storage.write(key: "privateKey", value: _privateKey);
+    await flutterSecureStorage.write(key: "token", value: _token);
+    await flutterSecureStorage.write(key: "username", value: _username);
+    await flutterSecureStorage.write(key: "publicKey", value: _publicKey);
+    await flutterSecureStorage.write(key: "privateKey", value: _privateKey);
     AppLogger.instance.d("Written to secure storage: $_token");
   }
 
@@ -83,7 +131,7 @@ class CoreApi with ChangeNotifier {
     final publicKey = await keyPair.extractPublicKey();
     _publicKey = base64Encode(publicKey.bytes);
 
-    final response = await ApiHttpClient.instance.register(
+    final response = await httpClient.register(
       username: username,
       master_hash: masterHash,
       public_key: _publicKey!,
@@ -96,7 +144,8 @@ class CoreApi with ChangeNotifier {
   }
 
   void connect() {
-    ApiSocketClient.instance.connect(
+    socketClient = ApiSocketClient(token: _token!);
+    socketClient!.connect(
       _token!,
       onConnect: (_) {
         isConnected = true;
@@ -106,55 +155,44 @@ class CoreApi with ChangeNotifier {
         isConnected = false;
         notifyListeners();
       },
-      onChat: _onChat,
+      onChat: onChatHandler,
     );
-  }
-
-  Future<void> _onChat(Map<String, dynamic> e) async {
-    if (_token == null) throw Error();
-    final payload = ChatMessagePayload.fromJson(e);
-    await MyDatabase.instance.into(MyDatabase.instance.message).insert(
-          MessageData(
-            id: payload.messageId,
-            username: payload.username,
-            encryptedPayload: base64Decode(payload.encryptedPayload),
-            sentAt: DateTime.parse(payload.timestamp),
-            direction: MessageDirection.received,
-          ),
-        );
   }
 
   Future<ParsedMessage> decryptMessageData(
     MessageData message,
-    String publicKey,
+    String remotePublicKey,
   ) async {
-    final sharedKey = await getSharedKey(
+    return decryptMessageDataHandler(
+      encryptedPayload: message.encryptedPayload,
+      remotePublicKey: remotePublicKey,
       publicKey: _publicKey!,
       privateKey: _privateKey!,
-      remotePublicKeyString: publicKey,
-    );
-    final unencrypted = await decryptMessage(
-      sharedKey,
-      message.encryptedPayload,
-    );
-    return ParsedMessage.fromJson(
-      jsonDecode(unencrypted) as Map<String, dynamic>,
     );
   }
 
   Future<UserResponse> getUser(String username) async {
+    final userPublicKey = await getCachedPublicKey(username);
+    if (userPublicKey != null) {
+      return UserResponse(
+        username: username,
+        publicKey: userPublicKey,
+      );
+    }
     if (_token == null) throw Error();
-    final user = await ApiHttpClient.instance.getUser(
+    final user = await httpClient.getUser(
       username: username,
       token: _token!,
     );
+    final key = "public_key_$username";
+    await flutterSecureStorage.write(key: key, value: user.publicKey);
     return user;
   }
 
   Future<UserResponse> getMe() async {
     if (_token == null) throw Error();
     try {
-      final user = await ApiHttpClient.instance.getMe(
+      final user = await httpClient.getMe(
         token: _token!,
       );
       return user;
@@ -162,6 +200,16 @@ class CoreApi with ChangeNotifier {
       await logout();
       rethrow;
     }
+  }
+
+  Future<void> registerNotifications({
+    required String notificationToken,
+  }) async {
+    if (_token == null) throw Error();
+    return await httpClient.registerNotifications(
+      token: _token!,
+      notificationToken: notificationToken,
+    );
   }
 
   Future<bool> sendMessage({
@@ -189,7 +237,7 @@ class CoreApi with ChangeNotifier {
             direction: MessageDirection.sent,
           ),
         );
-    return ApiHttpClient.instance.sendMessage(
+    return httpClient.sendMessage(
       token: _token!,
       payload: ChatMessagePayload(
         messageId: messageId,
@@ -203,7 +251,8 @@ class CoreApi with ChangeNotifier {
   Future<void> logout() async {
     if (_token == null) throw Error();
     await MyDatabase.instance.message.deleteAll();
-    ApiSocketClient.instance.disconnect();
+    socketClient?.disconnect();
+    socketClient = null;
     _token = null;
     _username = null;
     _publicKey = null;
@@ -211,7 +260,7 @@ class CoreApi with ChangeNotifier {
     isLoading = false;
     clearSecureStorage();
     notifyListeners();
-    await ApiHttpClient.instance.logout(
+    await httpClient.logout(
       token: _token!,
     );
   }

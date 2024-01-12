@@ -4,20 +4,17 @@ import '../helpers/constants.dart';
 import '../helpers/logger.dart';
 
 class ApiSocketClient {
-  IO.Socket? socket;
+  IO.Socket socket;
 
-  void initiateSocket(String token) {
-    socket = IO.io(
-      baseUrl,
-      IO.OptionBuilder().setTransports(['websocket']).setAuth(
-          {"Authorization": "Bearer $token"}).build(),
-    );
-  }
-
-  static final ApiSocketClient instance = ApiSocketClient();
+  ApiSocketClient({required String token})
+      : socket = IO.io(
+          baseUrl,
+          IO.OptionBuilder().setTransports(['websocket']).setAuth(
+              {"Authorization": "Bearer $token"}).build(),
+        );
 
   void disconnect() {
-    socket?.disconnect();
+    socket.disconnect();
   }
 
   void connect(
@@ -26,20 +23,19 @@ class ApiSocketClient {
     dynamic Function(dynamic)? onDisconnect,
     dynamic Function(Map<String, dynamic>)? onChat,
   }) {
-    initiateSocket(token);
-    socket!.onConnect((e) {
+    socket.onConnect((e) {
       if (onConnect != null) {
         onConnect(e);
       }
       AppLogger.instance.d('connect');
     });
-    socket!.onDisconnect((e) {
+    socket.onDisconnect((e) {
       if (onDisconnect != null) {
         onDisconnect(e);
       }
       AppLogger.instance.d('disconnect');
     });
-    socket!.on('chat', (e) {
+    socket.on('chat', (e) {
       AppLogger.instance.d(e);
       if (onChat != null) {
         onChat(e as Map<String, dynamic>);

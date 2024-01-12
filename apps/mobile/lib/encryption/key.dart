@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 
 import '../helpers/constants.dart';
+import '../helpers/logger.dart';
 
 Future<String> getMasterHash(String username, String master_key) async {
   final pbkdf2 = Pbkdf2(
@@ -29,9 +30,9 @@ String generateMasterKey() {
   return base64UrlEncode(values);
 }
 
-final algorithm = X25519();
+final keyShairAlgorithm = X25519();
 Future<SimpleKeyPair> newKeyPair() async {
-  final keyPair = await algorithm.newKeyPair();
+  final keyPair = await keyShairAlgorithm.newKeyPair();
   return keyPair;
 }
 
@@ -53,16 +54,16 @@ Future<SecretKey> getSharedKey({
     ),
     type: KeyPairType.x25519,
   );
-  final sharedSecretKey = await algorithm.sharedSecretKey(
+  final sharedSecretKey = await keyShairAlgorithm.sharedSecretKey(
     keyPair: keyPair,
     remotePublicKey: remotePublicKey,
   );
   return sharedSecretKey;
 }
 
+final encryptionAlgorithm = AesCbc.with256bits(macAlgorithm: Hmac.sha256());
 Future<Uint8List> encryptMessage(SecretKey secretKey, String message) async {
-  final algorithm = AesCbc.with256bits(macAlgorithm: Hmac.sha256());
-  final secretBox = await algorithm.encrypt(
+  final secretBox = await encryptionAlgorithm.encrypt(
     message.codeUnits,
     secretKey: secretKey,
   );
@@ -70,13 +71,13 @@ Future<Uint8List> encryptMessage(SecretKey secretKey, String message) async {
 }
 
 Future<String> decryptMessage(SecretKey secretKey, Uint8List payload) async {
-  final algorithm = AesCbc.with256bits(macAlgorithm: Hmac.sha256());
   final secretBox = SecretBox.fromConcatenation(
     payload,
     nonceLength: 16,
-    macLength: algorithm.macAlgorithm.macLength,
+    macLength: encryptionAlgorithm.macAlgorithm.macLength,
   );
-  final unencrypted = await algorithm.decrypt(
+  AppLogger.instance.d("Initialized secret box");
+  final unencrypted = await encryptionAlgorithm.decrypt(
     secretBox,
     secretKey: secretKey,
   );

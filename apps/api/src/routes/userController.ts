@@ -42,6 +42,21 @@ export class UsersController {
     };
   }
 
+  @Post("/notifications")
+  @Security("bearer")
+  public async registerNotification(
+    @Body() body: { notificationToken: string },
+    @Request() request: SecureRequest
+  ) {
+    const username = request.loggedInUser.username;
+    const token = body.notificationToken;
+    const updated = await this.userService.update(
+      { username: username },
+      { notificationToken: token }
+    );
+    return updated;
+  }
+
   @Get("/me")
   @Security("bearer")
   public async getMe(@Request() request: SecureRequest) {

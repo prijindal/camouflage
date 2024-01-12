@@ -28,8 +28,6 @@ class ApiHttpClient {
     },
   ));
 
-  static final ApiHttpClient instance = ApiHttpClient();
-
   Future<void> health() async {
     try {
       await dio.get<dynamic>("/api/health");
@@ -56,6 +54,26 @@ class ApiHttpClient {
       return RegisterResponse(
         username: response.data["username"] as String,
         token: response.data["token"] as String,
+      );
+    } on DioException catch (e) {
+      AppLogger.instance.e(e.response);
+      rethrow;
+    }
+  }
+
+  Future<void> registerNotifications({
+    required String token,
+    required String notificationToken,
+  }) async {
+    try {
+      await dio.post<dynamic>(
+        "/api/users/notifications",
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+          },
+        ),
+        data: jsonEncode({"notificationToken": notificationToken}),
       );
     } on DioException catch (e) {
       AppLogger.instance.e(e.response);

@@ -1,10 +1,13 @@
 import "reflect-metadata";
 
 import { logger } from "@repo/logger";
+import firebaseAdmin from "firebase-admin";
+import { applicationDefault, initializeApp } from "firebase-admin/app";
 import { inject } from "inversify";
 import { Socket } from "socket.io";
 import { singleton } from "../singleton";
 import { AuthService } from "./auth.service";
+import { UserService } from "./user.service";
 
 type ChatMessage = {
   username: string;
@@ -12,6 +15,10 @@ type ChatMessage = {
   timestamp: string;
   encrypted_payload: string;
 };
+
+initializeApp({
+  credential: applicationDefault(),
+});
 
 class UserSocketServer {
   username: string;
@@ -24,7 +31,10 @@ class UserSocketServer {
 
 @singleton(SocketService)
 export class SocketService {
-  constructor(@inject(AuthService) private authService: AuthService) {}
+  constructor(
+    @inject(AuthService) private authService: AuthService,
+    @inject(UserService) private userService: UserService
+  ) {}
   instances: Record<string, UserSocketServer> = {};
 
   async newConnection(socket: Socket) {
@@ -38,13 +48,52 @@ export class SocketService {
     }
   }
 
+  async sendNotification(
+    username: string,
+    notification: string,
+    data: Record<string, string>,
+    notificationTag: string
+  ) {
+    // TODO: Move to it's own service
+    const user = await this.userService.getOne(username, "username");
+    if (user != null && user.notificationToken != null) {
+      try {
+        const response = await firebaseAdmin.messaging().send({
+          token: user.notificationToken,
+          data: data,
+          notification: {
+            title: notification,
+          },
+          android: {
+            notification: {
+              tag: notificationTag,
+            },
+          },
+          apns: {
+            headers: {
+              "apns-collapse-id": notificationTag,
+            },
+          },
+        });
+        logger.debug(response);
+      } catch (e) {
+        logger.error(e);
+      }
+    } else {
+      logger.warn(`Failed to send notification to ${username}`);
+    }
+  }
+
   async sendChatMessage(from: string, message: ChatMessage) {
     const to = message.username;
-    if (this.instances[to] != null) {
-      const response = this.instances[to].socket.emit("chat", {
+    const instance = this.instances[to];
+    if (instance != null) {
+      const chatMessage = {
         ...message,
         username: from,
-      });
+      };
+      const response = instance.socket.emit("chat", chatMessage);
+      this.sendNotification(to, from, chatMessage, chatMessage.message_id);
       return response;
     } else {
       // Send it to a queue
