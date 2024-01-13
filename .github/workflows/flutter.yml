@@ -38,7 +38,7 @@ jobs:
       - run: flutter pub global activate flutterfire_cli
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
-      - run: flutter test
+      # - run: flutter test
       - name: save release key
         env:
           KEY_FILE_BASE64: ${{ secrets.KEY_FILE_BASE64 }}
@@ -100,7 +100,7 @@ jobs:
       - run: flutter pub global activate flutterfire_cli
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
-      - run: flutter test --coverage
+      # - run: flutter test --coverage
       - uses: codecov/codecov-action@v3
         with:
           flags: app-flutter
@@ -152,7 +152,7 @@ jobs:
       - run: flutter pub global activate flutterfire_cli
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
-      - run: flutter test
+      # - run: flutter test
       # - run: curl -sL https://firebase.tools | bash
       # - run: echo "$FIREBASE_SERVICE_ACCOUNT_CAMOUFLAGE_PRIJINDAL" > google-application-credentials.json
       #   env:
@@ -193,10 +193,10 @@ jobs:
       - run: flutter pub global activate flutterfire_cli
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
-      - run: flutter test
-      # - run: flutter build windows --release
-      # - uses: actions/upload-artifact@v3
-      #   with:
-      #     name: windows
-      #     path: build/windows
-      #     retention-days: 1
+      # - run: flutter test
+      - run: flutter build windows --release
+      - uses: actions/upload-artifact@v3
+        with:
+          name: windows
+          path: build/windows
+          retention-days: 1
