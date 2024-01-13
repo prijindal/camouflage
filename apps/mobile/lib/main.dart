@@ -34,7 +34,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() {
   runApp(const MyApp());
-  initiateLocalNotifications().catchError((e) {
+  initiateLocalNotifications().catchError((dynamic e) {
     AppLogger.instance.e(e);
   });
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);

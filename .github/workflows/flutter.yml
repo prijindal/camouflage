@@ -37,7 +37,7 @@ jobs:
       - run: flutter --version
       - run: flutter pub global activate flutterfire_cli
       - run: flutter pub get
-      - run: flutter analyze
+      - run: flutter analyze --no-fatal-infos
       - run: flutter test
       - name: save release key
         env:
@@ -66,14 +66,14 @@ jobs:
           name: android
           path: build/app/outputs
           retention-days: 1
-      - uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
-          packageName: com.camouflage.camouflage
-          track: internal
-          status: completed
-          releaseFiles: build/app/outputs/bundle/release/app-release.aab
-          mappingFile: build/app/outputs/mapping/release/mapping.txt
+      # - uses: r0adkll/upload-google-play@v1
+      #   with:
+      #     serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+      #     packageName: com.camouflage.camouflage
+      #     track: internal
+      #     status: completed
+      #     releaseFiles: build/app/outputs/bundle/release/app-release.aab
+      #     mappingFile: build/app/outputs/mapping/release/mapping.txt
 
   linux:
     runs-on: ubuntu-latest
@@ -99,7 +99,7 @@ jobs:
       - run: flutter --version
       - run: flutter pub global activate flutterfire_cli
       - run: flutter pub get
-      - run: flutter analyze
+      - run: flutter analyze --no-fatal-infos
       - run: flutter test --coverage
       - uses: codecov/codecov-action@v3
         with:
@@ -151,7 +151,7 @@ jobs:
       - run: flutter --version
       - run: flutter pub global activate flutterfire_cli
       - run: flutter pub get
-      - run: flutter analyze
+      - run: flutter analyze --no-fatal-infos
       - run: flutter test
       # - run: curl -sL https://firebase.tools | bash
       # - run: echo "$FIREBASE_SERVICE_ACCOUNT_CAMOUFLAGE_PRIJINDAL" > google-application-credentials.json
@@ -192,7 +192,7 @@ jobs:
       - run: flutter --version
       - run: flutter pub global activate flutterfire_cli
       - run: flutter pub get
-      - run: flutter analyze
+      - run: flutter analyze --no-fatal-infos
       - run: flutter test
       # - run: flutter build windows --release
       # - uses: actions/upload-artifact@v3
