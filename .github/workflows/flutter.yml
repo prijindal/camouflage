@@ -131,6 +131,7 @@ jobs:
           projectId: camouflage-14147
 
   macos:
+    if: false
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
@@ -172,6 +173,7 @@ jobs:
           path: apps/mobile/build/ios
 
   windows:
+    if: false
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
