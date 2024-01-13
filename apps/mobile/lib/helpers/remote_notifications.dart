@@ -36,6 +36,10 @@ Future<void> remoteMessageHandler(RemoteMessage message) async {
 
     await clearNotificationByTag(messageId);
 
+    // TODO: Consider not doing this, it is not a good idea to show messages on notification
+    // Also, it creates a ton of issues
+    // Maybe, only display a message when it is invoked when app is already opened?
+
     flutterLocalNotificationsPlugin.show(
       message.notification.hashCode,
       message.data["username"] as String,

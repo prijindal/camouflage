@@ -4,6 +4,7 @@ import { Body, Get, Path, Post, Request, Route, Security, Tags } from "tsoa";
 import { User } from "../entity/user.entity";
 import { CustomError } from "../errors/error";
 import { AuthService } from "../service/auth.service";
+import { SocketService } from "../service/socket.service";
 import { UserService } from "../service/user.service";
 import { singleton } from "../singleton";
 import { SecureRequest } from "../types/auth_user";
@@ -19,7 +20,8 @@ export type UserCreationParams = Omit<
 export class UsersController {
   constructor(
     @inject(UserService) private userService: UserService,
-    @inject(AuthService) private authService: AuthService
+    @inject(AuthService) private authService: AuthService,
+    @inject(SocketService) private socketService: SocketService
   ) {}
 
   @Post("/register")
@@ -74,7 +76,7 @@ export class UsersController {
 
   @Get("/:username")
   @Security("bearer")
-  public async getUser(@Path("username") username: string, @Request() request: SecureRequest) {
+  public async getUser(@Path("username") username: string) {
     const user = await this.userService.getOne(username, "username");
     if (user == null) {
       throw new CustomError("User not found", 404, "User not found");
@@ -82,6 +84,13 @@ export class UsersController {
     return {
       username: user.username,
       public_key: user.public_key,
+      online: this.socketService.isUserOnline(user.username),
     };
+  }
+
+  @Get("/:username/online")
+  @Security("bearer")
+  public async getUserOnline(@Path("username") username: string) {
+    return this.socketService.isUserOnline(username);
   }
 }

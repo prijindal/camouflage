@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 
 import '../helpers/constants.dart';
-import '../helpers/logger.dart';
 
 Future<String> getMasterHash(String username, String master_key) async {
   final pbkdf2 = Pbkdf2(
@@ -76,7 +75,6 @@ Future<String> decryptMessage(SecretKey secretKey, Uint8List payload) async {
     nonceLength: 16,
     macLength: encryptionAlgorithm.macAlgorithm.macLength,
   );
-  AppLogger.instance.d("Initialized secret box");
   final unencrypted = await encryptionAlgorithm.decrypt(
     secretBox,
     secretKey: secretKey,

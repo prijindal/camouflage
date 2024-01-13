@@ -171,6 +171,11 @@ class CoreApi with ChangeNotifier {
     );
   }
 
+  Future<bool> userOnline(String username) async {
+    if (_token == null) throw Error();
+    return httpClient.userOnline(username: username, token: _token!);
+  }
+
   Future<UserResponse> getUser(String username) async {
     final userPublicKey = await getCachedPublicKey(username);
     if (userPublicKey != null) {

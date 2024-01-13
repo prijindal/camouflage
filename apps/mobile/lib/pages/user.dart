@@ -179,11 +179,29 @@ class _UserPageState extends State<UserPage> {
   bool isLoading = true;
   String? error;
   UserResponse? user;
+  bool online = false;
+  Timer? _onlineTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchUser();
+    _fetchOnline();
+    _onlineTimer = Timer.periodic(Duration(seconds: 1), (_) => _fetchOnline());
+  }
+
+  @override
+  void dispose() {
+    _onlineTimer?.cancel();
+    super.dispose();
+  }
+
+  void _fetchOnline() async {
+    final coreApi = Provider.of<CoreApi>(context, listen: false);
+    final isOnline = await coreApi.userOnline(widget.username);
+    setState(() {
+      online = isOnline;
+    });
   }
 
   void _fetchUser() async {
@@ -209,7 +227,20 @@ class _UserPageState extends State<UserPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.username),
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(widget.username),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Icon(
+                Icons.circle,
+                size: 16,
+                color: online ? Colors.green : Colors.red,
+              ),
+            ),
+          ],
+        ),
       ),
       body: isLoading
           ? const Center(

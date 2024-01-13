@@ -17,7 +17,10 @@ class UserResponse {
   String username;
   String publicKey;
 
-  UserResponse({required this.username, required this.publicKey});
+  UserResponse({
+    required this.username,
+    required this.publicKey,
+  });
 }
 
 class ApiHttpClient {
@@ -75,6 +78,26 @@ class ApiHttpClient {
         ),
         data: jsonEncode({"notificationToken": notificationToken}),
       );
+    } on DioException catch (e) {
+      AppLogger.instance.e(e.response);
+      rethrow;
+    }
+  }
+
+  Future<bool> userOnline({
+    required String username,
+    required String token,
+  }) async {
+    try {
+      final response = await dio.get<bool>(
+        "/api/users/$username/online",
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+          },
+        ),
+      );
+      return response.data ?? false;
     } on DioException catch (e) {
       AppLogger.instance.e(e.response);
       rethrow;

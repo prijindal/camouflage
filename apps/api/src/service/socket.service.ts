@@ -93,11 +93,19 @@ export class SocketService {
         username: from,
       };
       const response = instance.socket.emit("chat", chatMessage);
-      this.sendNotification(to, from, chatMessage, chatMessage.message_id);
+      this.sendNotification(to, from, { ...chatMessage, type: "chat" }, chatMessage.message_id);
       return response;
     } else {
       // Send it to a queue
       throw new Error("Username doesn't have a valid socket");
     }
+  }
+
+  isUserOnline(username: string) {
+    return (
+      this.instances[username] != null &&
+      this.instances[username].socket != null &&
+      this.instances[username].socket.connected
+    );
   }
 }
