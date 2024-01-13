@@ -11,9 +11,9 @@ WORKDIR /app
 EXPOSE 5001
 
 COPY --chown=node:node .npmrc package*.json turbo.json /app/
+RUN npm ci --omit=dev
+
 COPY --chown=node:node packages /app/packages
 COPY --chown=node:node apps /app/apps
-
-RUN npm ci --omit=dev
 
 CMD [ "dumb-init", "node", "apps/api/dist/index.js"]
