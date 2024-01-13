@@ -111,24 +111,24 @@ jobs:
       - run: flutterfire configure -y --platforms=web --ios-bundle-id=com.camouflage.camouflage --macos-bundle-id=com.camouflage.camouflage --web-app-id=1:739292996360:web:5c24f4c3b47c73559e82bd --android-package-name=com.camouflage.camouflage
         env:
           GOOGLE_APPLICATION_CREDENTIALS: google-application-credentials.json
-      - run: flutter build web --release
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: "${{ secrets.GITHUB_TOKEN }}"
-          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_CAMOUFLAGE_PRIJINDAL }}"
-          channelId: live
-          projectId: camouflage-14147
-      - uses: actions/upload-artifact@v3
-        with:
-          name: web
-          path: apps/mobile/build/web
-          retention-days: 1
       - run: flutter build linux --release
       - uses: actions/upload-artifact@v3
         with:
           name: linux
           path: apps/mobile/build/linux
           retention-days: 1
+      - run: flutter build web --release
+      - uses: actions/upload-artifact@v3
+        with:
+          name: web
+          path: apps/mobile/build/web
+          retention-days: 1
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_CAMOUFLAGE_PRIJINDAL }}"
+          channelId: live
+          projectId: camouflage-14147
 
   macos:
     runs-on: macos-latest
