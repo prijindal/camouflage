@@ -60,12 +60,12 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: google-application-credentials.json
       - run: flutter build apk --release
-      - run: flutter build appbundle --release
       - uses: actions/upload-artifact@v3
         with:
           name: android
           path: apps/mobile/build/app/outputs
           retention-days: 1
+      - run: flutter build appbundle --release
       # - uses: r0adkll/upload-google-play@v1
       #   with:
       #     serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
