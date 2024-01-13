@@ -129,6 +129,7 @@ jobs:
           firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_CAMOUFLAGE_PRIJINDAL }}"
           channelId: live
           projectId: camouflage-14147
+          entryPoint: apps/mobile
 
   macos:
     if: false
