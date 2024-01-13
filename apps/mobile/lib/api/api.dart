@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
@@ -29,7 +28,7 @@ Future<ChatMessagePayload> onChatHandler(Map<String, dynamic> e) async {
             direction: MessageDirection.received,
           ),
         );
-  } on SqliteException catch (e) {
+  } catch (e) {
     AppLogger.instance.e(e);
   }
   return payload;
