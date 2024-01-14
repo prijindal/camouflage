@@ -20,7 +20,7 @@ class Message extends Table {
   TextColumn get direction => textEnum<MessageDirection>()();
   TextColumn get username => text()();
   BlobColumn get encryptedPayload => blob()();
-  DateTimeColumn get sentAt => dateTime()();
+  DateTimeColumn get sentAt => dateTime().nullable()();
   DateTimeColumn get receivedAt => dateTime().nullable()();
   DateTimeColumn get readAt => dateTime().nullable()();
   DateTimeColumn get deletionAt => dateTime().nullable()();

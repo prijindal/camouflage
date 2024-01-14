@@ -16,8 +16,7 @@ import './socket.dart';
 
 const _uuid = Uuid();
 
-Future<ChatMessagePayload> onChatHandler(Map<String, dynamic> e) async {
-  final payload = ChatMessagePayload.fromJson(e);
+Future<ChatMessagePayload> onChatHandler(ChatMessagePayload payload) async {
   try {
     await MyDatabase.instance.into(MyDatabase.instance.message).insert(
           MessageData(
@@ -32,6 +31,38 @@ Future<ChatMessagePayload> onChatHandler(Map<String, dynamic> e) async {
     AppLogger.instance.e(e);
   }
   return payload;
+}
+
+Future<void> onReceivedHandler(ReceivedMessagePayload payload) async {
+  try {
+    await (MyDatabase.instance.message.update()
+          ..where((tbl) => tbl.id.equals(payload.messageId)))
+        .write(
+      MessageCompanion(
+        receivedAt: Value(
+          DateTime.parse(payload.timestamp),
+        ),
+      ),
+    );
+  } catch (e) {
+    AppLogger.instance.e(e);
+  }
+}
+
+Future<void> onReadHandler(ReceivedMessagePayload payload) async {
+  try {
+    await (MyDatabase.instance.message.update()
+          ..where((tbl) => tbl.id.equals(payload.messageId)))
+        .write(
+      MessageCompanion(
+        readAt: Value(
+          DateTime.parse(payload.timestamp),
+        ),
+      ),
+    );
+  } catch (e) {
+    AppLogger.instance.e(e);
+  }
 }
 
 Future<ParsedMessage> decryptMessageDataHandler({
@@ -154,7 +185,26 @@ class CoreApi with ChangeNotifier {
         isConnected = false;
         notifyListeners();
       },
-      onChat: onChatHandler,
+      onChat: (e) async {
+        final payload = ChatMessagePayload.fromJson(e);
+        await onChatHandler(payload);
+        final receivedPayload = ReceivedMessagePayload(
+          messageId: payload.messageId,
+          timestamp: DateTime.now().toIso8601String(),
+          username: payload.username,
+        );
+        await receivedMessage(
+          payload: receivedPayload,
+        );
+      },
+      onReceived: (e) async {
+        final receivedPayload = ReceivedMessagePayload.fromJson(e);
+        await onReceivedHandler(receivedPayload);
+      },
+      onRead: (e) async {
+        final payload = ReceivedMessagePayload.fromJson(e);
+        await onReadHandler(payload);
+      },
     );
   }
 
@@ -237,11 +287,10 @@ class CoreApi with ChangeNotifier {
             id: messageId,
             username: username,
             encryptedPayload: encryptedPayload,
-            sentAt: timestamp,
             direction: MessageDirection.sent,
           ),
         );
-    return httpClient.sendMessage(
+    final response = httpClient.sendMessage(
       token: _token!,
       payload: ChatMessagePayload(
         messageId: messageId,
@@ -249,6 +298,21 @@ class CoreApi with ChangeNotifier {
         timestamp: timestamp.toIso8601String(),
         username: username,
       ),
+    );
+    await (MyDatabase.instance.message.update()
+          ..where((tbl) => tbl.id.equals(messageId)))
+        .write(
+      MessageCompanion(sentAt: Value(timestamp)),
+    );
+    return response;
+  }
+
+  Future<bool> receivedMessage(
+      {required ReceivedMessagePayload payload}) async {
+    if (_token == null) throw Error();
+    return await httpClient.receivedMessage(
+      token: _token!,
+      payload: payload,
     );
   }
 

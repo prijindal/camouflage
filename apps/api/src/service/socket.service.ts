@@ -16,6 +16,12 @@ type ChatMessage = {
   encrypted_payload: string;
 };
 
+type ReceivedMessage = {
+  username: string;
+  message_id: string;
+  timestamp: string;
+};
+
 initializeApp({
   credential: applicationDefault(),
 });
@@ -94,6 +100,36 @@ export class SocketService {
       };
       const response = instance.socket.emit("chat", chatMessage);
       this.sendNotification(to, from, { ...chatMessage, type: "chat" }, chatMessage.message_id);
+      return response;
+    } else {
+      // Send it to a queue
+      throw new Error("Username doesn't have a valid socket");
+    }
+  }
+
+  async receivedChatMessage(from: string, message: ReceivedMessage) {
+    const to = message.username;
+    const instance = this.instances[to];
+    if (instance != null) {
+      const response = instance.socket.emit("received", {
+        ...message,
+        username: from,
+      });
+      return response;
+    } else {
+      // Send it to a queue
+      throw new Error("Username doesn't have a valid socket");
+    }
+  }
+
+  async readChatMessage(from: string, message: ReceivedMessage) {
+    const to = message.username;
+    const instance = this.instances[to];
+    if (instance != null) {
+      const response = instance.socket.emit("received", {
+        ...message,
+        username: from,
+      });
       return response;
     } else {
       // Send it to a queue

@@ -33,3 +33,35 @@ class ChatMessagePayload {
     );
   }
 }
+
+class ReceivedMessagePayload {
+  final String messageId;
+  final String timestamp;
+  final String username;
+
+  ReceivedMessagePayload({
+    required this.messageId,
+    required this.timestamp,
+    required this.username,
+  });
+
+  // Convert the object to a JSON representation
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> json = {
+      'message_id': messageId,
+      'timestamp': timestamp,
+      'username': username,
+    };
+
+    return json;
+  }
+
+  // Create an object from a JSON representation
+  factory ReceivedMessagePayload.fromJson(Map<String, dynamic> json) {
+    return ReceivedMessagePayload(
+      messageId: json['message_id'] as String,
+      timestamp: json['timestamp'] as String,
+      username: json['username'] as String,
+    );
+  }
+}

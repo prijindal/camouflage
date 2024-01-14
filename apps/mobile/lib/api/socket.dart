@@ -22,6 +22,8 @@ class ApiSocketClient {
     dynamic Function(dynamic)? onConnect,
     dynamic Function(dynamic)? onDisconnect,
     dynamic Function(Map<String, dynamic>)? onChat,
+    dynamic Function(Map<String, dynamic>)? onReceived,
+    dynamic Function(Map<String, dynamic>)? onRead,
   }) {
     socket.onConnect((e) {
       if (onConnect != null) {
@@ -39,6 +41,18 @@ class ApiSocketClient {
       AppLogger.instance.d(e);
       if (onChat != null) {
         onChat(e as Map<String, dynamic>);
+      }
+    });
+    socket.on('received', (e) {
+      AppLogger.instance.d(e);
+      if (onReceived != null) {
+        onReceived(e as Map<String, dynamic>);
+      }
+    });
+    socket.on('read', (e) {
+      AppLogger.instance.d(e);
+      if (onRead != null) {
+        onRead(e as Map<String, dynamic>);
       }
     });
   }

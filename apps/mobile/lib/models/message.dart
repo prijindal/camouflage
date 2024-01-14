@@ -11,7 +11,7 @@ class DisplayMessage {
   final MessageDirection direction;
   final MessageType type;
   final Uint8List body;
-  final DateTime sentAt;
+  final DateTime? sentAt;
   final DateTime? receivedAt;
   final DateTime? readAt;
 

@@ -170,6 +170,27 @@ class ApiHttpClient {
     }
   }
 
+  Future<bool> receivedMessage({
+    required String token,
+    required ReceivedMessagePayload payload,
+  }) async {
+    try {
+      final response = await dio.post<bool>(
+        "/api/chat/message/received",
+        data: payload.toJson(),
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+          },
+        ),
+      );
+      return response.data ?? false;
+    } on DioException catch (e) {
+      AppLogger.instance.e(e.response);
+      rethrow;
+    }
+  }
+
   Future<void> logout({
     required String token,
   }) async {

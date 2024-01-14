@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/api.dart';
+import '../helpers/constants.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -20,6 +21,10 @@ class _RegisterPageState extends State<RegisterPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text("Login"),
+        bottom: PreferredSize(
+          preferredSize: Size.zero,
+          child: Text("Connected to $baseUrl"),
+        ),
       ),
       body: Center(
         child: Column(

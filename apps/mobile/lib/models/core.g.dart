@@ -37,8 +37,8 @@ class $MessageTable extends Message with TableInfo<$MessageTable, MessageData> {
   static const VerificationMeta _sentAtMeta = const VerificationMeta('sentAt');
   @override
   late final GeneratedColumn<DateTime> sentAt = GeneratedColumn<DateTime>(
-      'sent_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+      'sent_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _receivedAtMeta =
       const VerificationMeta('receivedAt');
   @override
@@ -100,8 +100,6 @@ class $MessageTable extends Message with TableInfo<$MessageTable, MessageData> {
     if (data.containsKey('sent_at')) {
       context.handle(_sentAtMeta,
           sentAt.isAcceptableOrUnknown(data['sent_at']!, _sentAtMeta));
-    } else if (isInserting) {
-      context.missing(_sentAtMeta);
     }
     if (data.containsKey('received_at')) {
       context.handle(
@@ -138,7 +136,7 @@ class $MessageTable extends Message with TableInfo<$MessageTable, MessageData> {
       encryptedPayload: attachedDatabase.typeMapping.read(
           DriftSqlType.blob, data['${effectivePrefix}encrypted_payload'])!,
       sentAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}sent_at'])!,
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}sent_at']),
       receivedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}received_at']),
       readAt: attachedDatabase.typeMapping
@@ -163,7 +161,7 @@ class MessageData extends DataClass implements Insertable<MessageData> {
   final MessageDirection direction;
   final String username;
   final Uint8List encryptedPayload;
-  final DateTime sentAt;
+  final DateTime? sentAt;
   final DateTime? receivedAt;
   final DateTime? readAt;
   final DateTime? deletionAt;
@@ -172,7 +170,7 @@ class MessageData extends DataClass implements Insertable<MessageData> {
       required this.direction,
       required this.username,
       required this.encryptedPayload,
-      required this.sentAt,
+      this.sentAt,
       this.receivedAt,
       this.readAt,
       this.deletionAt});
@@ -186,7 +184,9 @@ class MessageData extends DataClass implements Insertable<MessageData> {
     }
     map['username'] = Variable<String>(username);
     map['encrypted_payload'] = Variable<Uint8List>(encryptedPayload);
-    map['sent_at'] = Variable<DateTime>(sentAt);
+    if (!nullToAbsent || sentAt != null) {
+      map['sent_at'] = Variable<DateTime>(sentAt);
+    }
     if (!nullToAbsent || receivedAt != null) {
       map['received_at'] = Variable<DateTime>(receivedAt);
     }
@@ -205,7 +205,8 @@ class MessageData extends DataClass implements Insertable<MessageData> {
       direction: Value(direction),
       username: Value(username),
       encryptedPayload: Value(encryptedPayload),
-      sentAt: Value(sentAt),
+      sentAt:
+          sentAt == null && nullToAbsent ? const Value.absent() : Value(sentAt),
       receivedAt: receivedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(receivedAt),
@@ -227,7 +228,7 @@ class MessageData extends DataClass implements Insertable<MessageData> {
       username: serializer.fromJson<String>(json['username']),
       encryptedPayload:
           serializer.fromJson<Uint8List>(json['encryptedPayload']),
-      sentAt: serializer.fromJson<DateTime>(json['sentAt']),
+      sentAt: serializer.fromJson<DateTime?>(json['sentAt']),
       receivedAt: serializer.fromJson<DateTime?>(json['receivedAt']),
       readAt: serializer.fromJson<DateTime?>(json['readAt']),
       deletionAt: serializer.fromJson<DateTime?>(json['deletionAt']),
@@ -242,7 +243,7 @@ class MessageData extends DataClass implements Insertable<MessageData> {
           .toJson<String>($MessageTable.$converterdirection.toJson(direction)),
       'username': serializer.toJson<String>(username),
       'encryptedPayload': serializer.toJson<Uint8List>(encryptedPayload),
-      'sentAt': serializer.toJson<DateTime>(sentAt),
+      'sentAt': serializer.toJson<DateTime?>(sentAt),
       'receivedAt': serializer.toJson<DateTime?>(receivedAt),
       'readAt': serializer.toJson<DateTime?>(readAt),
       'deletionAt': serializer.toJson<DateTime?>(deletionAt),
@@ -254,7 +255,7 @@ class MessageData extends DataClass implements Insertable<MessageData> {
           MessageDirection? direction,
           String? username,
           Uint8List? encryptedPayload,
-          DateTime? sentAt,
+          Value<DateTime?> sentAt = const Value.absent(),
           Value<DateTime?> receivedAt = const Value.absent(),
           Value<DateTime?> readAt = const Value.absent(),
           Value<DateTime?> deletionAt = const Value.absent()}) =>
@@ -263,7 +264,7 @@ class MessageData extends DataClass implements Insertable<MessageData> {
         direction: direction ?? this.direction,
         username: username ?? this.username,
         encryptedPayload: encryptedPayload ?? this.encryptedPayload,
-        sentAt: sentAt ?? this.sentAt,
+        sentAt: sentAt.present ? sentAt.value : this.sentAt,
         receivedAt: receivedAt.present ? receivedAt.value : this.receivedAt,
         readAt: readAt.present ? readAt.value : this.readAt,
         deletionAt: deletionAt.present ? deletionAt.value : this.deletionAt,
@@ -313,7 +314,7 @@ class MessageCompanion extends UpdateCompanion<MessageData> {
   final Value<MessageDirection> direction;
   final Value<String> username;
   final Value<Uint8List> encryptedPayload;
-  final Value<DateTime> sentAt;
+  final Value<DateTime?> sentAt;
   final Value<DateTime?> receivedAt;
   final Value<DateTime?> readAt;
   final Value<DateTime?> deletionAt;
@@ -334,7 +335,7 @@ class MessageCompanion extends UpdateCompanion<MessageData> {
     required MessageDirection direction,
     required String username,
     required Uint8List encryptedPayload,
-    required DateTime sentAt,
+    this.sentAt = const Value.absent(),
     this.receivedAt = const Value.absent(),
     this.readAt = const Value.absent(),
     this.deletionAt = const Value.absent(),
@@ -342,8 +343,7 @@ class MessageCompanion extends UpdateCompanion<MessageData> {
   })  : id = Value(id),
         direction = Value(direction),
         username = Value(username),
-        encryptedPayload = Value(encryptedPayload),
-        sentAt = Value(sentAt);
+        encryptedPayload = Value(encryptedPayload);
   static Insertable<MessageData> custom({
     Expression<String>? id,
     Expression<String>? direction,
@@ -373,7 +373,7 @@ class MessageCompanion extends UpdateCompanion<MessageData> {
       Value<MessageDirection>? direction,
       Value<String>? username,
       Value<Uint8List>? encryptedPayload,
-      Value<DateTime>? sentAt,
+      Value<DateTime?>? sentAt,
       Value<DateTime?>? receivedAt,
       Value<DateTime?>? readAt,
       Value<DateTime?>? deletionAt,

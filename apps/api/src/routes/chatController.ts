@@ -12,7 +12,7 @@ export class ChatController {
 
   @Post("/message")
   @Security("bearer")
-  public async getMe(
+  public async sendMessage(
     @Body()
     body: {
       username: string;
@@ -24,6 +24,38 @@ export class ChatController {
   ) {
     const from = request.loggedInUser.username;
     const ack = await this.socketService.sendChatMessage(from, body);
+    return ack;
+  }
+
+  @Post("/message/received")
+  @Security("bearer")
+  public async receivedMessage(
+    @Body()
+    body: {
+      username: string;
+      message_id: string;
+      timestamp: string;
+    },
+    @Request() request: SecureRequest
+  ) {
+    const from = request.loggedInUser.username;
+    const ack = await this.socketService.receivedChatMessage(from, body);
+    return ack;
+  }
+
+  @Post("/message/read")
+  @Security("bearer")
+  public async readMessage(
+    @Body()
+    body: {
+      username: string;
+      message_id: string;
+      timestamp: string;
+    },
+    @Request() request: SecureRequest
+  ) {
+    const from = request.loggedInUser.username;
+    const ack = await this.socketService.readChatMessage(from, body);
     return ack;
   }
 }

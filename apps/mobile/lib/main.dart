@@ -71,6 +71,18 @@ class MyApp extends StatelessWidget {
   }
 }
 
+final themeData = ThemeData(
+  // primarySwatch: Colors.blue, // Not working ??
+  primaryColor: Colors.blue,
+  useMaterial3: true,
+);
+
+final lightTheme = themeData.copyWith(
+  appBarTheme: themeData.appBarTheme.copyWith(
+    backgroundColor: themeData.primaryColor,
+  ),
+);
+
 class MyMaterialApp extends StatelessWidget {
   const MyMaterialApp({super.key});
   // This widget is the root of your application.
@@ -80,8 +92,8 @@ class MyMaterialApp extends StatelessWidget {
     final coreApi = Provider.of<CoreApi>(context);
     AppLogger.instance.d("Building MyApp");
     return MaterialApp(
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      darkTheme: ThemeData.dark(useMaterial3: true),
+      theme: lightTheme,
+      // darkTheme: ThemeData.dark(useMaterial3: true),
       themeMode: themeNotifier.getTheme(),
       home: coreApi.isLoading
           ? const LoadingPage()
