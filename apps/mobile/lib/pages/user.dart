@@ -1,13 +1,12 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/api.dart';
 import '../api/http.dart';
+import '../components/chatform.dart';
 import '../components/chatmessagelist.dart';
-import '../models/message.dart';
 
 class UserChat extends StatefulWidget {
   const UserChat({
@@ -21,23 +20,9 @@ class UserChat extends StatefulWidget {
 }
 
 class _UserChatState extends State<UserChat> {
-  final _formKey = GlobalKey<FormState>();
-  final _textController = TextEditingController();
-
-  Future<void> _sendChatMessage() async {
-    final coreApi = Provider.of<CoreApi>(context, listen: false);
-    if (_formKey.currentState!.validate()) {
-      final body = Uint8List.fromList(_textController.text.codeUnits);
-      _textController.clear();
-      await coreApi.sendMessage(
-        payload: ParsedMessage(
-          type: MessageType.text,
-          body: body,
-        ),
-        username: widget.user.username,
-        publicKey: widget.user.publicKey,
-      );
-    }
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -50,32 +35,7 @@ class _UserChatState extends State<UserChat> {
           flex: 1,
           child: ChatMessagesList(user: widget.user),
         ),
-        Form(
-          key: _formKey,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _textController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please enter some text";
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                IconButton(
-                  onPressed: _sendChatMessage,
-                  icon: const Icon(Icons.send),
-                ),
-              ],
-            ),
-          ),
-        ),
+        ChatForm(user: widget.user),
       ],
     );
   }

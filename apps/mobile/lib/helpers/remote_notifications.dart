@@ -8,9 +8,13 @@ import '../models/payloads.dart';
 import 'local_notifications.dart';
 import 'logger.dart';
 
+Future<void> _remoteOnChatHandler(ChatMessagePayload payload) async {
+  await onChatHandlerForDb(payload); // Run parallelly
+}
+
 Future<void> remoteMessageHandler(RemoteMessage message) async {
   final payload = ChatMessagePayload.fromJson(message.data);
-  onChatHandler(payload); // Run parallelly
+  _remoteOnChatHandler(payload);
 
   final publicKey = await flutterSecureStorage.read(key: "publicKey");
   final privateKey = await flutterSecureStorage.read(key: "privateKey");

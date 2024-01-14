@@ -11,6 +11,7 @@ import '../api/api.dart';
 import '../helpers/firebase.dart';
 import '../helpers/logger.dart';
 import '../models/drift.dart';
+import '../models/payloads.dart';
 import './user.dart';
 import 'new_chat.dart';
 
@@ -120,13 +121,46 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
     final coreApi = Provider.of<CoreApi>(context, listen: false);
     coreApi.connect();
+    _init();
+  }
+
+  Future<void> _init() async {
     _registerNotificationPermissions();
     _setupInteractedMessage();
+    _markReceived();
+  }
+
+  Future<void> _markReceived() async {
+    setState(() {
+      _isLoading = true;
+    });
+    final coreApi = Provider.of<CoreApi>(context, listen: false);
+    final messages =
+        await (MyDatabase.instance.select(MyDatabase.instance.message)
+              ..where((tbl) => tbl.receivedAt.isNull())
+              ..where((tbl) => tbl.direction.equals("received")))
+            .get();
+    for (final message in messages) {
+      final receivedPayload = ReceivedMessagePayload(
+        messageId: message.id,
+        timestamp: DateTime.now().toIso8601String(),
+        username: message.username,
+      );
+      await coreApi.receivedMessage(
+        payload: receivedPayload,
+      );
+      await onReceivedHandlerOnDb(receivedPayload);
+    }
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   // It is assumed that all messages contain a data field with the key 'type'
@@ -218,6 +252,14 @@ class _HomePageState extends State<HomePage> {
                 color: coreApi.isConnected ? Colors.green : Colors.red,
               ),
             ),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.0),
+                child: Icon(
+                  Icons.refresh,
+                  size: 16,
+                ),
+              ),
           ],
         ),
         actions: [

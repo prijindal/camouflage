@@ -126,7 +126,7 @@ export class SocketService {
     const to = message.username;
     const instance = this.instances[to];
     if (instance != null) {
-      const response = instance.socket.emit("received", {
+      const response = instance.socket.emit("read", {
         ...message,
         username: from,
       });

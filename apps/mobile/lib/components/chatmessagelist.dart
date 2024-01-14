@@ -9,6 +9,7 @@ import '../api/http.dart';
 import '../models/core.dart';
 import '../models/drift.dart';
 import '../models/message.dart';
+import '../models/payloads.dart';
 import 'chatmessage.dart';
 
 class ChatMessagesList extends StatefulWidget {
@@ -19,20 +20,31 @@ class ChatMessagesList extends StatefulWidget {
   State<ChatMessagesList> createState() => _ChatMessagesListState();
 }
 
-class _ChatMessagesListState extends State<ChatMessagesList> {
+class _ChatMessagesListState extends State<ChatMessagesList>
+    with WidgetsBindingObserver {
   List<DisplayMessage> _messages = [];
   StreamSubscription<List<MessageData>>? _subscription;
+  AppLifecycleState? _notification;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _addWatcher();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _subscription?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    setState(() {
+      _notification = state;
+    });
   }
 
   void _addWatcher() {
@@ -65,11 +77,33 @@ class _ChatMessagesListState extends State<ChatMessagesList> {
             readAt: element.readAt,
           ),
         );
+        _markRead(element);
       }
       setState(() {
         _messages = messages;
       });
     });
+  }
+
+  bool get _isLifecycleActive =>
+      _notification == null || _notification == AppLifecycleState.resumed;
+
+  Future<void> _markRead(MessageData message) async {
+    if (_isLifecycleActive &&
+        message.receivedAt != null &&
+        message.readAt == null &&
+        message.direction == MessageDirection.received) {
+      final coreApi = Provider.of<CoreApi>(context, listen: false);
+      final receivedPayload = ReceivedMessagePayload(
+        messageId: message.id,
+        timestamp: DateTime.now().toIso8601String(),
+        username: message.username,
+      );
+      await coreApi.readMessage(
+        payload: receivedPayload,
+      );
+      await onReadHandlerOnDb(receivedPayload);
+    }
   }
 
   @override

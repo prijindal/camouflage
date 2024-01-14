@@ -16,7 +16,8 @@ import './socket.dart';
 
 const _uuid = Uuid();
 
-Future<ChatMessagePayload> onChatHandler(ChatMessagePayload payload) async {
+Future<ChatMessagePayload> onChatHandlerForDb(
+    ChatMessagePayload payload) async {
   try {
     await MyDatabase.instance.into(MyDatabase.instance.message).insert(
           MessageData(
@@ -33,7 +34,7 @@ Future<ChatMessagePayload> onChatHandler(ChatMessagePayload payload) async {
   return payload;
 }
 
-Future<void> onReceivedHandler(ReceivedMessagePayload payload) async {
+Future<void> onReceivedHandlerOnDb(ReceivedMessagePayload payload) async {
   try {
     await (MyDatabase.instance.message.update()
           ..where((tbl) => tbl.id.equals(payload.messageId)))
@@ -49,7 +50,7 @@ Future<void> onReceivedHandler(ReceivedMessagePayload payload) async {
   }
 }
 
-Future<void> onReadHandler(ReceivedMessagePayload payload) async {
+Future<void> onReadHandlerOnDb(ReceivedMessagePayload payload) async {
   try {
     await (MyDatabase.instance.message.update()
           ..where((tbl) => tbl.id.equals(payload.messageId)))
@@ -187,7 +188,7 @@ class CoreApi with ChangeNotifier {
       },
       onChat: (e) async {
         final payload = ChatMessagePayload.fromJson(e);
-        await onChatHandler(payload);
+        await onChatHandlerForDb(payload);
         final receivedPayload = ReceivedMessagePayload(
           messageId: payload.messageId,
           timestamp: DateTime.now().toIso8601String(),
@@ -196,14 +197,15 @@ class CoreApi with ChangeNotifier {
         await receivedMessage(
           payload: receivedPayload,
         );
+        await onReceivedHandlerOnDb(receivedPayload);
       },
       onReceived: (e) async {
         final receivedPayload = ReceivedMessagePayload.fromJson(e);
-        await onReceivedHandler(receivedPayload);
+        await onReceivedHandlerOnDb(receivedPayload);
       },
       onRead: (e) async {
         final payload = ReceivedMessagePayload.fromJson(e);
-        await onReadHandler(payload);
+        await onReadHandlerOnDb(payload);
       },
     );
   }
@@ -311,6 +313,14 @@ class CoreApi with ChangeNotifier {
       {required ReceivedMessagePayload payload}) async {
     if (_token == null) throw Error();
     return await httpClient.receivedMessage(
+      token: _token!,
+      payload: payload,
+    );
+  }
+
+  Future<bool> readMessage({required ReceivedMessagePayload payload}) async {
+    if (_token == null) throw Error();
+    return await httpClient.readMessage(
       token: _token!,
       payload: payload,
     );

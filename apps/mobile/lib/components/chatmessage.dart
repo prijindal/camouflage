@@ -26,6 +26,7 @@ class _ChatMessageState extends State<ChatMessage> {
     } else {
       icon = Icons.done_all;
     }
+    // print(message.readAt);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
       child: Icon(
