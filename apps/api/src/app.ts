@@ -34,9 +34,9 @@ app.use(cors());
 app.use(express.static(UI_BUILD_PATH));
 app.use(bodyParser.json({ limit: "100mb" }));
 
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.use("/swagger.json", (_, res) => res.send(swaggerDocument));
+app.use("/api/swagger.json", (_, res) => res.send(swaggerDocument));
 
 app.use(metricsMiddleware);
 

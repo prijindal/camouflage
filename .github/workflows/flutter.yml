@@ -174,7 +174,6 @@ jobs:
           path: apps/mobile/build/ios
 
   windows:
-    if: false
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
