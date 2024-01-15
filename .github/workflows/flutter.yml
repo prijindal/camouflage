@@ -146,7 +146,6 @@ jobs:
           entryPoint: apps/mobile
 
   macos:
-    if: false
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3

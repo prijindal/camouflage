@@ -1,11 +1,9 @@
 {
-  "eslint.workingDirectories": [
-    "apps",
-    "packages"
-  ],
+  "eslint.workingDirectories": ["apps", "packages"],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "prettier.printWidth": 100,
   "prettier.arrowParens": "avoid",
+  "editor.tabSize": 2,
   "prettier.enable": true,
   "prettier.endOfLine": "lf",
   "prettier.jsxSingleQuote": false,
@@ -25,5 +23,5 @@
   },
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
+  }
 }
