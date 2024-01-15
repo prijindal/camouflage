@@ -114,20 +114,28 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: google-application-credentials.json
       - run: flutter build linux --release
+      - uses: vimtor/action-zip@v1.1
+        with:
+          files: apps/mobile/build/linux/x64/release/bundle/
+          dest: apps/mobile/build/linux/x64/release/zip/linux.zip
       - uses: shallwefootball/s3-upload-action@master
         with:
           aws_key_id: ${{ secrets.AWS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: apps/mobile/build/linux
+          source_dir: apps/mobile/build/linux/x64/release/zip
           destination_dir: ${{ github.repository }}/${{ github.ref_name }}/linux
       - run: flutter build web --release
+      - uses: vimtor/action-zip@v1.1
+        with:
+          files: apps/mobile/build/web/
+          dest: apps/mobile/build/web-zip/web.zip
       - uses: shallwefootball/s3-upload-action@master
         with:
           aws_key_id: ${{ secrets.AWS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: apps/mobile/build/web
+          source_dir: apps/mobile/build/web-zip
           destination_dir: ${{ github.repository }}/${{ github.ref_name }}/web
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
@@ -209,10 +217,14 @@ jobs:
       - run: flutter analyze --no-fatal-infos
       # - run: flutter test
       - run: flutter build windows --release
+      - uses: vimtor/action-zip@v1.1
+        with:
+          files: apps/mobile/build/windows/x64/runner/Release/
+          dest: apps/mobile/build/windows/zip/windows.zip
       - uses: shallwefootball/s3-upload-action@master
         with:
           aws_key_id: ${{ secrets.AWS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: apps/mobile/build/windows
+          source_dir: apps/mobile/build/windows/zip
           destination_dir: ${{ github.repository }}/${{ github.ref_name }}/windows
