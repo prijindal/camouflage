@@ -60,11 +60,13 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: google-application-credentials.json
       - run: flutter build apk --release
-      - uses: actions/upload-artifact@v3
+      - uses: shallwefootball/s3-upload-action@master
         with:
-          name: android
-          path: apps/mobile/build/app/outputs/apk/release
-          retention-days: 1
+          aws_key_id: ${{ secrets.AWS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ secrets.AWS_BUCKET }}
+          source_dir: apps/mobile/build/app/outputs/apk/release
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}android
       - run: flutter build appbundle --release
       # - uses: r0adkll/upload-google-play@v1
       #   with:
@@ -112,17 +114,21 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: google-application-credentials.json
       - run: flutter build linux --release
-      - uses: actions/upload-artifact@v3
+      - uses: shallwefootball/s3-upload-action@master
         with:
-          name: linux
-          path: apps/mobile/build/linux
-          retention-days: 1
+          aws_key_id: ${{ secrets.AWS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ secrets.AWS_BUCKET }}
+          source_dir: apps/mobile/build/linux
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}linux
       - run: flutter build web --release
-      - uses: actions/upload-artifact@v3
+      - uses: shallwefootball/s3-upload-action@master
         with:
-          name: web
-          path: apps/mobile/build/web
-          retention-days: 1
+          aws_key_id: ${{ secrets.AWS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ secrets.AWS_BUCKET }}
+          source_dir: apps/mobile/build/web
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}web
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
@@ -163,15 +169,21 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: google-application-credentials.json
       - run: flutter build macos --release
-      - uses: actions/upload-artifact@v3
+      - uses: shallwefootball/s3-upload-action@master
         with:
-          name: macos
-          path: apps/mobile/build/macos
+          aws_key_id: ${{ secrets.AWS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ secrets.AWS_BUCKET }}
+          source_dir: apps/mobile/build/macos
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}macos
       - run: flutter build ios --release --no-codesign
-      - uses: actions/upload-artifact@v3
+      - uses: shallwefootball/s3-upload-action@master
         with:
-          name: ios
-          path: apps/mobile/build/ios
+          aws_key_id: ${{ secrets.AWS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ secrets.AWS_BUCKET }}
+          source_dir: apps/mobile/build/ios
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}ios
 
   windows:
     runs-on: windows-latest
@@ -197,8 +209,10 @@ jobs:
       - run: flutter analyze --no-fatal-infos
       # - run: flutter test
       - run: flutter build windows --release
-      - uses: actions/upload-artifact@v3
+      - uses: shallwefootball/s3-upload-action@master
         with:
-          name: windows
-          path: apps/mobile/build/windows
-          retention-days: 1
+          aws_key_id: ${{ secrets.AWS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ secrets.AWS_BUCKET }}
+          source_dir: apps/mobile/build/windows
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}windows
