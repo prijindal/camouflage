@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { NextFunction, Request, Response } from "express";
+// import { NextFunction, Request, Response } from "express";
 import { isEmpty, lowerCase } from "lodash";
 import pino from "pino";
 import pinoCaller from "pino-caller";
@@ -11,8 +11,8 @@ import { context } from "./async-context";
 export const logLevel = !isEmpty(process.env.LOG_LEVEL)
   ? lowerCase(process.env.LOG_LEVEL)
   : process.env.NODE_ENV === "production"
-  ? "info"
-  : "debug";
+    ? "info"
+    : "debug";
 
 const REQUEST_TRACING = process.env.REQUEST_TRACING === "true";
 
@@ -72,11 +72,11 @@ export const httpLogger = PinoHttp({
 
 // Generate a unique ID for each incoming request and store a child logger in context
 // to always log the request ID
-export const contextMiddleware = (req: Request, __: Response, next: NextFunction) => {
-  const loggerObj = createLoggerObject(req);
-  const child = pinoLogger.child(loggerObj);
-  const store = new Map();
-  store.set("logger", child);
+// export const contextMiddleware = (req: Request, __: Response, next: NextFunction) => {
+//   const loggerObj = createLoggerObject(req);
+//   const child = pinoLogger.child(loggerObj);
+//   const store = new Map();
+//   store.set("logger", child);
 
-  return (context as any).run(store, next);
-};
+//   return (context as any).run(store, next);
+// };
