@@ -66,7 +66,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
           source_dir: apps/mobile/build/app/outputs/apk/release
-          destination_dir: ${{ github.repository }}/${{ github.ref_name }}android
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}/android
       - run: flutter build appbundle --release
       # - uses: r0adkll/upload-google-play@v1
       #   with:
@@ -120,7 +120,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
           source_dir: apps/mobile/build/linux
-          destination_dir: ${{ github.repository }}/${{ github.ref_name }}linux
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}/linux
       - run: flutter build web --release
       - uses: shallwefootball/s3-upload-action@master
         with:
@@ -128,7 +128,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
           source_dir: apps/mobile/build/web
-          destination_dir: ${{ github.repository }}/${{ github.ref_name }}web
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}/web
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
@@ -175,7 +175,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
           source_dir: apps/mobile/build/macos
-          destination_dir: ${{ github.repository }}/${{ github.ref_name }}macos
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}/macos
       - run: flutter build ios --release --no-codesign
       - uses: shallwefootball/s3-upload-action@master
         with:
@@ -183,7 +183,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
           source_dir: apps/mobile/build/ios
-          destination_dir: ${{ github.repository }}/${{ github.ref_name }}ios
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}/ios
 
   windows:
     runs-on: windows-latest
@@ -215,4 +215,4 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
           source_dir: apps/mobile/build/windows
-          destination_dir: ${{ github.repository }}/${{ github.ref_name }}windows
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}/windows
