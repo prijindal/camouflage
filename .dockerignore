@@ -1,2 +1,4 @@
 node_modules
 apps/mobile
+apps/api/Dockerfile
+apps/docs/Dockerfile
