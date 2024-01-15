@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20]
+        service: [api]
 
     steps:
       - name: Set up QEMU
@@ -35,7 +35,7 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository }}:${{ github.ref_name }}/api
-          file: apps/api/Dockerfile
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/api:${{ github.ref_name }}
+          tags: ghcr.io/${{ github.repository }}/${{matrix.service}}:${{ github.ref_name }}
+          file: apps/${{matrix.service}}/Dockerfile
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/${{matrix.service}}:${{ github.ref_name }}
           cache-to: type=inline
