@@ -1,4 +1,6 @@
 node_modules
-apps/mobile
+apps/flutter/Dockerfile
+apps/flutter/build
+apps/flutter/.dart_tool
 apps/api/Dockerfile
 apps/docs/Dockerfile

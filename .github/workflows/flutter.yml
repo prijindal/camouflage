@@ -8,7 +8,7 @@ name: Flutter
 defaults:
   run:
     shell: bash
-    working-directory: ./apps/mobile
+    working-directory: ./apps/flutter
 
 jobs:
   android:
@@ -65,7 +65,7 @@ jobs:
           aws_key_id: ${{ secrets.AWS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: apps/mobile/build/app/outputs/apk/release
+          source_dir: apps/flutter/build/app/outputs/apk/release
           destination_dir: ${{ github.repository }}/${{ github.ref_name }}/android
       - run: flutter build appbundle --release
       # - uses: r0adkll/upload-google-play@v1
@@ -116,26 +116,26 @@ jobs:
       - run: flutter build linux --release
       - uses: vimtor/action-zip@v1.1
         with:
-          files: apps/mobile/build/linux/x64/release/bundle/
-          dest: apps/mobile/build/linux/x64/release/zip/linux.zip
+          files: apps/flutter/build/linux/x64/release/bundle/
+          dest: apps/flutter/build/linux/x64/release/zip/linux.zip
       - uses: shallwefootball/s3-upload-action@master
         with:
           aws_key_id: ${{ secrets.AWS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: apps/mobile/build/linux/x64/release/zip
+          source_dir: apps/flutter/build/linux/x64/release/zip
           destination_dir: ${{ github.repository }}/${{ github.ref_name }}/linux
       - run: flutter build web --release
       - uses: vimtor/action-zip@v1.1
         with:
-          files: apps/mobile/build/web/
-          dest: apps/mobile/build/web-zip/web.zip
+          files: apps/flutter/build/web/
+          dest: apps/flutter/build/web-zip/web.zip
       - uses: shallwefootball/s3-upload-action@master
         with:
           aws_key_id: ${{ secrets.AWS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: apps/mobile/build/web-zip
+          source_dir: apps/flutter/build/web-zip
           destination_dir: ${{ github.repository }}/${{ github.ref_name }}/web
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
@@ -143,9 +143,10 @@ jobs:
           firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_CAMOUFLAGE_PRIJINDAL }}"
           channelId: live
           projectId: camouflage-14147
-          entryPoint: apps/mobile
+          entryPoint: apps/flutter
 
   macos:
+    if: false
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
@@ -181,7 +182,7 @@ jobs:
           aws_key_id: ${{ secrets.AWS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: apps/mobile/build/macos
+          source_dir: apps/flutter/build/macos
           destination_dir: ${{ github.repository }}/${{ github.ref_name }}/macos
       - run: flutter build ios --release --no-codesign
       - uses: shallwefootball/s3-upload-action@master
@@ -189,7 +190,7 @@ jobs:
           aws_key_id: ${{ secrets.AWS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: apps/mobile/build/ios
+          source_dir: apps/flutter/build/ios
           destination_dir: ${{ github.repository }}/${{ github.ref_name }}/ios
 
   windows:
@@ -218,12 +219,12 @@ jobs:
       - run: flutter build windows --release
       - uses: vimtor/action-zip@v1.1
         with:
-          files: apps/mobile/build/windows/x64/runner/Release/
-          dest: apps/mobile/build/windows/zip/windows.zip
+          files: apps/flutter/build/windows/x64/runner/Release/
+          dest: apps/flutter/build/windows/zip/windows.zip
       - uses: shallwefootball/s3-upload-action@master
         with:
           aws_key_id: ${{ secrets.AWS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: apps/mobile/build/windows/zip
+          source_dir: apps/flutter/build/windows/zip
           destination_dir: ${{ github.repository }}/${{ github.ref_name }}/windows
