@@ -18,11 +18,13 @@
     "preset": "@repo/jest-presets/jest/node"
   },
   "dependencies": {
+    "lodash": "^4.17.21",
     "pino": "^8.16.1",
     "pino-caller": "^3.4.0",
     "pino-http": "^8.5.1"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.202",
     "@types/node": "^20.9.0",
     "@types/jest": "^29.5.11",
     "eslint": "^8.56.0",
