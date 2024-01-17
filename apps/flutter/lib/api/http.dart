@@ -2,7 +2,6 @@ import "dart:convert";
 
 import "package:dio/dio.dart";
 
-import "../helpers/constants.dart";
 import "../helpers/logger.dart";
 import "../models/payloads.dart";
 
@@ -24,12 +23,15 @@ class UserResponse {
 }
 
 class ApiHttpClient {
-  final dio = Dio(BaseOptions(
-    baseUrl: baseUrl,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  ));
+  final Dio dio;
+
+  ApiHttpClient({required String baseUrl})
+      : dio = Dio(BaseOptions(
+          baseUrl: baseUrl,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        ));
 
   Future<void> health() async {
     try {

@@ -1,12 +1,11 @@
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
-import '../helpers/constants.dart';
 import '../helpers/logger.dart';
 
 class ApiSocketClient {
   IO.Socket socket;
 
-  ApiSocketClient({required String token})
+  ApiSocketClient({required String baseUrl, required String token})
       : socket = IO.io(
           baseUrl,
           IO.OptionBuilder().setTransports(['websocket']).setAuth(

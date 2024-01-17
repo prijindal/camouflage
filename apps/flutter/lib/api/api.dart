@@ -95,8 +95,9 @@ Future<String?> getCachedPublicKey(String username) async {
 }
 
 class CoreApi with ChangeNotifier {
+  final String baseUrl;
   ApiSocketClient? socketClient;
-  final httpClient = ApiHttpClient();
+  final ApiHttpClient httpClient;
   bool isLoading = false;
   bool isConnected = false;
   String? _token;
@@ -104,7 +105,10 @@ class CoreApi with ChangeNotifier {
   String? _publicKey;
   String? _privateKey;
 
-  CoreApi() {
+  CoreApi({required this.baseUrl})
+      : httpClient = ApiHttpClient(
+          baseUrl: baseUrl,
+        ) {
     init();
   }
 
@@ -175,7 +179,10 @@ class CoreApi with ChangeNotifier {
   }
 
   void connect() {
-    socketClient = ApiSocketClient(token: _token!);
+    socketClient = ApiSocketClient(
+      token: _token!,
+      baseUrl: baseUrl,
+    );
     socketClient!.connect(
       _token!,
       onConnect: (_) {

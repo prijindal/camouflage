@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/api.dart';
-import '../helpers/constants.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -23,7 +22,7 @@ class _RegisterPageState extends State<RegisterPage> {
         title: const Text("Login"),
         bottom: PreferredSize(
           preferredSize: Size.zero,
-          child: Text("Connected to $baseUrl"),
+          child: Text("Connected to ${coreApi.baseUrl}"),
         ),
       ),
       body: Center(

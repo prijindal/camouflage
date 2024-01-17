@@ -10,6 +10,7 @@ import "./models/theme.dart";
 import './pages/home.dart';
 import './pages/loading.dart';
 import './pages/register.dart';
+import 'helpers/constants.dart';
 import 'helpers/local_notifications.dart';
 import 'helpers/remote_notifications.dart';
 
@@ -63,7 +64,9 @@ class MyApp extends StatelessWidget {
           create: (_) => ThemeModeNotifier(ThemeMode.system),
         ),
         ChangeNotifierProvider<CoreApi>(
-          create: (_) => CoreApi(),
+          create: (_) => CoreApi(
+            baseUrl: baseUrl,
+          ),
         ),
       ],
       child: const MyMaterialApp(),

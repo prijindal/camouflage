@@ -5,6 +5,6 @@ const appThemeMode = "APP_THEME_MODE";
 
 String baseUrl = const String.fromEnvironment(
   "BASE_URL",
-  defaultValue: "https://camouflage.3.110.101.83.nip.io",
+  defaultValue: "https://camouflage.prijindal.click",
   // defaultValue: "http://192.168.1.2:3000",
 );
