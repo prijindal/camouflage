@@ -68,14 +68,21 @@ jobs:
           source_dir: apps/flutter/build/app/outputs/apk/release
           destination_dir: ${{ github.repository }}/${{ github.ref_name }}/android
       - run: flutter build appbundle --release
+      - uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.AWS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ secrets.AWS_BUCKET }}
+          source_dir: apps/flutter/build/app/outputs/bundle/release
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}/android
       - uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.camouflage.camouflage
           track: internal
           status: completed
-          releaseFiles: build/app/outputs/bundle/release/app-release.aab
-          mappingFile: build/app/outputs/mapping/release/mapping.txt
+          releaseFiles: apps/flutter/build/app/outputs/bundle/release/app-release.aab
+          mappingFile: apps/flutter/build/app/outputs/mapping/release/mapping.txt
 
   linux:
     runs-on: ubuntu-latest
