@@ -117,6 +117,7 @@ jobs:
       - run: flutterfire configure -y --platforms=web --ios-bundle-id=com.camouflage.camouflage --macos-bundle-id=com.camouflage.camouflage --web-app-id=1:739292996360:web:5c24f4c3b47c73559e82bd --android-package-name=com.camouflage.camouflage
         env:
           GOOGLE_APPLICATION_CREDENTIALS: google-application-credentials.json
+      - run: dart run generate_web_sw.dart
       - run: flutter build web --release
       - uses: shallwefootball/s3-upload-action@master
         with:
