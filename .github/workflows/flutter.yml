@@ -83,6 +83,80 @@ jobs:
           status: draft
           releaseFiles: apps/flutter/build/app/outputs/bundle/release/app-release.aab
           mappingFile: apps/flutter/build/app/outputs/mapping/release/mapping.txt
+          debugSymbols: apps/flutter/build/app/intermediates/merged_native_libs/release/out/lib
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: "stable" # or: 'beta', 'dev' or 'master'
+          architecture: x64 # optional, x64 or arm64
+          cache: true
+          cache-key: "flutter-${{ github.job }}-:os:-:channel:-:version:-:arch:-:hash:"
+          cache-path: "${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:"
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: build/
+          key: ${{ runner.os }}-flutter-${{ github.job }}-${{ hashFiles('pubspec.lock') }}
+
+      - run: flutter --version
+      - run: flutter pub global activate flutterfire_cli
+      - run: flutter pub get
+      - run: curl -sL https://firebase.tools | bash
+      - run: echo "$FIREBASE_SERVICE_ACCOUNT_CAMOUFLAGE_PRIJINDAL" > google-application-credentials.json
+        env:
+          FIREBASE_SERVICE_ACCOUNT_CAMOUFLAGE_PRIJINDAL: ${{secrets.FIREBASE_SERVICE_ACCOUNT_CAMOUFLAGE_PRIJINDAL}}
+      - run: flutterfire configure -y --platforms=web --ios-bundle-id=com.camouflage.camouflage --macos-bundle-id=com.camouflage.camouflage --web-app-id=1:739292996360:web:5c24f4c3b47c73559e82bd --android-package-name=com.camouflage.camouflage
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: google-application-credentials.json
+
+      - run: flutter build web --release
+      - uses: vimtor/action-zip@v1.1
+        with:
+          files: apps/flutter/build/web/
+          dest: apps/flutter/build/web-zip/web.zip
+      - uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.AWS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ secrets.AWS_BUCKET }}
+          source_dir: apps/flutter/build/web-zip
+          destination_dir: ${{ github.repository }}/${{ github.ref_name }}/web
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_CAMOUFLAGE_PRIJINDAL }}"
+          channelId: live
+          projectId: camouflage-14147
+          entryPoint: apps/flutter
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Github Packages
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: apps/flutter
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/${{ github.repository }}/flutter:${{ github.ref_name }}
+          file: apps/flutter/Dockerfile
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/flutter:${{ github.ref_name }}
+          cache-to: type=inline
 
   linux:
     runs-on: ubuntu-latest
@@ -132,25 +206,6 @@ jobs:
           aws_bucket: ${{ secrets.AWS_BUCKET }}
           source_dir: apps/flutter/build/linux/x64/release/zip
           destination_dir: ${{ github.repository }}/${{ github.ref_name }}/linux
-      - run: flutter build web --release
-      - uses: vimtor/action-zip@v1.1
-        with:
-          files: apps/flutter/build/web/
-          dest: apps/flutter/build/web-zip/web.zip
-      - uses: shallwefootball/s3-upload-action@master
-        with:
-          aws_key_id: ${{ secrets.AWS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: apps/flutter/build/web-zip
-          destination_dir: ${{ github.repository }}/${{ github.ref_name }}/web
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: "${{ secrets.GITHUB_TOKEN }}"
-          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_CAMOUFLAGE_PRIJINDAL }}"
-          channelId: live
-          projectId: camouflage-14147
-          entryPoint: apps/flutter
 
   macos:
     if: false
