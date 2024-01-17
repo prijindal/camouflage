@@ -168,8 +168,8 @@ class CoreApi with ChangeNotifier {
 
     final response = await httpClient.register(
       username: username,
-      master_hash: masterHash,
-      public_key: _publicKey!,
+      masterHash: masterHash,
+      publicKey: _publicKey!,
     );
     _token = response.token;
     _username = response.username;
@@ -280,8 +280,9 @@ class CoreApi with ChangeNotifier {
     required String username,
     required String publicKey,
   }) async {
-    if (_token == null || _publicKey == null || _privateKey == null)
+    if (_token == null || _publicKey == null || _privateKey == null) {
       throw Error();
+    }
     final sharedKey = await getSharedKey(
       publicKey: _publicKey!,
       privateKey: _privateKey!,

@@ -19,13 +19,13 @@ void main(List<String> args) async {
   ];
 
   for (final key in keys) {
-    final exp = RegExp("${key}: '([A-Za-z0-9:.-]*)'");
+    final exp = RegExp("$key: '([A-Za-z0-9:.-]*)'");
 
     final match = exp.firstMatch(firebaseOptionsContent);
     if (match != null) {
       final value = match.group(1);
 
-      content = content.replaceAll("{{${key}}}", value!);
+      content = content.replaceAll("{{$key}}", value!);
     }
   }
 

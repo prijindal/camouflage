@@ -6,15 +6,15 @@ import 'package:cryptography/cryptography.dart';
 
 import '../helpers/constants.dart';
 
-Future<String> getMasterHash(String username, String master_key) async {
+Future<String> getMasterHash(String username, String masterKey) async {
   final pbkdf2 = Pbkdf2(
     macAlgorithm: Hmac.sha256(),
-    iterations: ITERATIONS,
-    bits: HASH_LENGTH,
+    iterations: iterations,
+    bits: hashLength,
   );
 
   final secretKey = SecretKey(const Utf8Encoder().convert(username));
-  final salt = const Utf8Encoder().convert(master_key);
+  final salt = const Utf8Encoder().convert(masterKey);
 
   final newSecretKey =
       await pbkdf2.deriveKey(secretKey: secretKey, nonce: salt);
@@ -25,7 +25,7 @@ Future<String> getMasterHash(String username, String master_key) async {
 
 String generateMasterKey() {
   var random = Random.secure();
-  var values = List<int>.generate(HASH_LENGTH, (i) => random.nextInt(255));
+  var values = List<int>.generate(hashLength, (i) => random.nextInt(255));
   return base64UrlEncode(values);
 }
 

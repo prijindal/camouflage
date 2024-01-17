@@ -44,16 +44,16 @@ class ApiHttpClient {
 
   Future<RegisterResponse> register({
     required String username,
-    required String master_hash,
-    required String public_key,
+    required String masterHash,
+    required String publicKey,
   }) async {
     try {
       final response = await dio.post<dynamic>(
         "/api/users/register",
         data: jsonEncode({
           "username": username,
-          "master_hash": master_hash,
-          "public_key": public_key,
+          "master_hash": masterHash,
+          "public_key": publicKey,
         }),
       );
       return RegisterResponse(

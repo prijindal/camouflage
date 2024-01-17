@@ -61,7 +61,7 @@ class _UserPageState extends State<UserPage> {
     super.initState();
     _fetchUser();
     _fetchOnline();
-    _onlineTimer = Timer.periodic(Duration(seconds: 1), (_) => _fetchOnline());
+    _onlineTimer = Timer.periodic(const Duration(seconds: 1), (_) => _fetchOnline());
   }
 
   @override

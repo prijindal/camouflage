@@ -204,7 +204,8 @@ class _HomePageState extends State<HomePage> {
       provisional: false,
       sound: true,
     );
-    if (permission.authorizationStatus != AuthorizationStatus.authorized) {
+    if (permission.authorizationStatus != AuthorizationStatus.authorized &&
+        context.mounted) {
       final scaffoldMessenger = ScaffoldMessenger.of(context);
       scaffoldMessenger.showSnackBar(
         SnackBar(
@@ -229,9 +230,11 @@ class _HomePageState extends State<HomePage> {
     }
     final token = await FirebaseMessaging.instance.getToken();
     if (token != null) {
-      final coreApi = Provider.of<CoreApi>(context, listen: false);
-      await coreApi.registerNotifications(notificationToken: token);
-      AppLogger.instance.d("Registered notification successfully");
+      if (context.mounted) {
+        final coreApi = Provider.of<CoreApi>(context, listen: false);
+        await coreApi.registerNotifications(notificationToken: token);
+        AppLogger.instance.d("Registered notification successfully");
+      }
     }
   }
 

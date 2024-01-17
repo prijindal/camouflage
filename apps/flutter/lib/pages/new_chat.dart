@@ -23,7 +23,7 @@ class _NewChatPageState extends State<NewChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Enter a user")),
+      appBar: AppBar(title: const Text("Enter a user")),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
