@@ -3,6 +3,7 @@ import { BaseDataSourceOptions } from "typeorm/data-source/BaseDataSourceOptions
 import { BetterSqlite3ConnectionOptions } from "typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions";
 import { MysqlConnectionOptions } from "typeorm/driver/mysql/MysqlConnectionOptions";
 import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
+import { Message } from "../entity/message.entity";
 import { User } from "../entity/user.entity";
 import { PinoTypeormLogger } from "./typeorm_logger";
 
@@ -24,7 +25,7 @@ const typeOrmLogging: LoggerOptions = logLevelMap[logLevel] || [
 
 const createOptions = () => {
   let options: Omit<BaseDataSourceOptions, "type"> = {
-    entities: [User],
+    entities: [User, Message],
     synchronize: AUTO_MIGRATION,
     logging: typeOrmLogging,
     logger: new PinoTypeormLogger(),
@@ -49,7 +50,7 @@ const createOptions = () => {
     return {
       ...options,
       type: "better-sqlite3",
-      database: process.env.DB_PATH || "/tmp/camouflage.db",
+      database: process.env.DB_PATH || ":memory:",
     } as BetterSqlite3ConnectionOptions;
   }
 };

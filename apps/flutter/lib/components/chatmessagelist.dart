@@ -90,7 +90,6 @@ class _ChatMessagesListState extends State<ChatMessagesList>
 
   Future<void> _markRead(MessageData message) async {
     if (_isLifecycleActive &&
-        message.receivedAt != null &&
         message.readAt == null &&
         message.direction == MessageDirection.received) {
       final coreApi = Provider.of<CoreApi>(context, listen: false);

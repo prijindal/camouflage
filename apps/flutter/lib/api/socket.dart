@@ -39,19 +39,31 @@ class ApiSocketClient {
     socket.on('chat', (e) {
       AppLogger.instance.d(e);
       if (onChat != null) {
-        onChat(e as Map<String, dynamic>);
+        if (e is Map<String, dynamic>) {
+          onChat(e);
+        } else if (e is List<dynamic>) {
+          onChat(e[0] as Map<String, dynamic>);
+        }
       }
     });
     socket.on('received', (e) {
       AppLogger.instance.d(e);
       if (onReceived != null) {
-        onReceived(e as Map<String, dynamic>);
+        if (e is Map<String, dynamic>) {
+          onReceived(e);
+        } else if (e is List<dynamic>) {
+          onReceived(e[0] as Map<String, dynamic>);
+        }
       }
     });
     socket.on('read', (e) {
       AppLogger.instance.d(e);
       if (onRead != null) {
-        onRead(e as Map<String, dynamic>);
+        if (e is Map<String, dynamic>) {
+          onRead(e);
+        } else if (e is List<dynamic>) {
+          onRead(e[0] as Map<String, dynamic>);
+        }
       }
     });
   }

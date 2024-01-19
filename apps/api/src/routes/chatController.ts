@@ -1,5 +1,6 @@
 import { inject } from "inversify";
 import { Body, Post, Request, Route, Security, Tags } from "tsoa";
+import { MessageService } from "../service/message.service";
 import { SocketService } from "../service/socket.service";
 import { singleton } from "../singleton";
 import { SecureRequest } from "../types/auth_user";
@@ -8,7 +9,10 @@ import { SecureRequest } from "../types/auth_user";
 @Tags("chat")
 @singleton(ChatController)
 export class ChatController {
-  constructor(@inject(SocketService) private socketService: SocketService) {}
+  constructor(
+    @inject(SocketService) private socketService: SocketService,
+    @inject(MessageService) private messageService: MessageService
+  ) {}
 
   @Post("/message")
   @Security("bearer")
@@ -24,6 +28,13 @@ export class ChatController {
   ) {
     const from = request.loggedInUser.username;
     const ack = await this.socketService.sendChatMessage(from, body);
+    await this.messageService.create({
+      from,
+      to: body.username,
+      encrypted_payload: body.encrypted_payload,
+      message_id: body.message_id,
+      timestamp: body.timestamp,
+    });
     return ack;
   }
 

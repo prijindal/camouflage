@@ -3,6 +3,7 @@ import { inject } from "inversify";
 import { provide } from "inversify-binding-decorators";
 import {
   Brackets,
+  FindManyOptions,
   FindOptionsWhere,
   In,
   LessThanOrEqual,
@@ -120,6 +121,10 @@ export abstract class BaseTypeOrmService<T extends RootObject> {
       [queryBy]: value,
     } as FindOptionsWhere<T>;
     return await this.model.findOneBy(query);
+  }
+
+  async find(query: FindManyOptions<T>) {
+    return await this.model.find(query);
   }
 
   async create(newResource: Omit<T, "id" | "created_at" | "updated_at">): Promise<T> {

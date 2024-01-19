@@ -6,7 +6,7 @@ import promBundle from "express-prom-bundle";
 import * as swaggerUi from "swagger-ui-express";
 import { ValidateError } from "tsoa";
 
-import { logger } from "@repo/logger";
+import { httpLogger, logger } from "@repo/logger";
 import { JsonWebTokenError } from "jsonwebtoken";
 import { RegisterRoutes } from "./build/routes";
 import swaggerDocument from "./build/swagger.json";
@@ -39,6 +39,8 @@ app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use("/api/swagger.json", (_, res) => res.send(swaggerDocument));
 
 app.use(metricsMiddleware);
+
+app.use(httpLogger);
 
 RegisterRoutes(app);
 

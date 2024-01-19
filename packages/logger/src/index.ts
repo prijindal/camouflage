@@ -36,7 +36,7 @@ const pinoOptions: pino.LoggerOptions = {
 //   };
 // }
 
-let pinoLogger = pino(pinoOptions);
+export let pinoLogger = pino(pinoOptions);
 if (logLevel === "debug") {
   pinoLogger = pinoCaller(pinoLogger);
 }
