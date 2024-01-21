@@ -15,6 +15,10 @@
 - [ ] replace polling based online check for chat page with something better
 
 - [ ] UI improvements
+
   - [ ] register and new chat page
-  - [ ] sending images
+  - [x] sending images
   - [ ] on chat page, after every interval, check for unread messages, and mark them as read
+  - [ ] border and padding on images
+  - [ ] saving images, sharing images, forwarding texts
+  - [ ] click on image to view in fullscreen with zoom

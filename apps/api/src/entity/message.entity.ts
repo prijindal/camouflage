@@ -1,5 +1,6 @@
 import { Column, Entity } from "typeorm";
 import { RootObject } from "./rootObject";
+import { byteColumnOptions } from "./typeHelpers";
 
 @Entity({
   name: "messages",
@@ -11,7 +12,7 @@ export class Message extends RootObject {
   @Column()
   public to: string;
 
-  @Column({})
+  @Column(byteColumnOptions())
   public encrypted_payload: string;
 
   @Column({})
