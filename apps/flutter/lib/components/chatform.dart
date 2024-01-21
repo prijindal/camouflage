@@ -89,7 +89,7 @@ class _ChatFormState extends State<ChatForm> {
             },
           ),
           ListTile(
-            title: Text("Cancel"),
+            title: const Text("Cancel"),
             onTap: () => Navigator.of(context).pop(),
           )
         ],
