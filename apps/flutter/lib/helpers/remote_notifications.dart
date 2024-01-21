@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../api/api.dart';
+import '../models/message.dart';
 import '../models/payloads.dart';
 import 'local_notifications.dart';
 import 'logger.dart';
@@ -44,10 +45,14 @@ Future<void> remoteMessageHandler(RemoteMessage message) async {
     // Also, it creates a ton of issues
     // Maybe, only display a message when it is invoked when app is already opened?
 
+    final body = decryptedMessage.type == MessageType.text
+        ? String.fromCharCodes(decryptedMessage.body)
+        : null;
+
     flutterLocalNotificationsPlugin.show(
       message.notification.hashCode,
       payload.username,
-      String.fromCharCodes(decryptedMessage.body), // Only if it's text
+      body,
       NotificationDetails(
         android: AndroidNotificationDetails(
           channel.id,

@@ -105,21 +105,28 @@ export class SocketService {
     }
   }
 
+  async emitToUser(ev: string, username: string, payload: any) {
+    try {
+      const instance = this.instances[username];
+      if (instance != null) {
+        const response = instance.socket.emit(ev, payload);
+        return response;
+      }
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+
   async sendChatMessage(from: string, message: ChatMessage) {
     const to = message.username;
-    const instance = this.instances[to];
-    if (instance != null) {
-      const chatMessage = {
-        ...message,
-        username: from,
-      };
-      const response = instance.socket.emit("chat", chatMessage);
-      this.sendNotification(to, from, { ...chatMessage, type: "chat" }, chatMessage.message_id);
-      return response;
-    } else {
-      // Send it to a queue
-      throw new Error("Username doesn't have a valid socket");
-    }
+    const chatMessage = {
+      ...message,
+      username: from,
+    };
+    // First initiate sending notification
+    this.sendNotification(to, from, { ...chatMessage, type: "chat" }, chatMessage.message_id);
+    // then emit sending a chat message
+    this.emitToUser("chat", to, chatMessage);
   }
 
   async receivedChatMessage(from: string, message: ReceivedMessage) {
@@ -143,7 +150,7 @@ export class SocketService {
     const to = message.username;
     const instance = this.instances[to];
     if (instance != null) {
-      const response = instance.socket.emit("read", {
+      const response = instance.socket.emitWithAck("read", {
         ...message,
         username: from,
       });

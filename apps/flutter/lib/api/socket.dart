@@ -37,7 +37,7 @@ class ApiSocketClient {
       AppLogger.instance.d('disconnect');
     });
     socket.on('chat', (e) {
-      AppLogger.instance.d(e);
+      // AppLogger.instance.d(e);
       if (onChat != null) {
         if (e is Map<String, dynamic>) {
           onChat(e);

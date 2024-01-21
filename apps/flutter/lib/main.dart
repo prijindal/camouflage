@@ -98,7 +98,7 @@ class MyMaterialApp extends StatelessWidget {
       theme: lightTheme,
       // darkTheme: ThemeData.dark(useMaterial3: true),
       themeMode: themeNotifier.getTheme(),
-      home: coreApi.isLoading
+      home: coreApi.isLoadingLocal
           ? const LoadingPage()
           : !coreApi.isLoggedIn
               ? const RegisterPage()

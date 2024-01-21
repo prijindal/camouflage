@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -37,6 +39,37 @@ class _ChatMessageState extends State<ChatMessage> {
     );
   }
 
+  double get messageMaxWidth {
+    return min(400, MediaQuery.of(context).size.width - 100);
+  }
+
+  Widget _renderMessage() {
+    if (message.type == MessageType.text) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(String.fromCharCodes(message.body)),
+          if (message.direction == MessageDirection.sent) _status(),
+        ],
+      );
+    } else if (message.type == MessageType.image) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Image.memory(
+            message.body,
+            scale: 1,
+            width: messageMaxWidth,
+          ),
+          if (message.direction == MessageDirection.sent) _status(),
+        ],
+      );
+    }
+    return const Text("Invalid message");
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListTile(
@@ -64,13 +97,7 @@ class _ChatMessageState extends State<ChatMessage> {
                     Radius.elliptical(10, 10),
                   ),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(String.fromCharCodes(message.body)),
-                    if (message.direction == MessageDirection.sent) _status(),
-                  ],
-                ),
+                child: _renderMessage(),
               ),
             ],
           ),

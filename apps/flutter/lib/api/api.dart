@@ -98,7 +98,8 @@ class CoreApi with ChangeNotifier {
   final String baseUrl;
   ApiSocketClient? socketClient;
   final ApiHttpClient httpClient;
-  bool isLoading = false;
+  bool isLoadingLocal = false;
+  bool isCheckingHealth = false;
   bool isConnected = false;
   String? _token;
   String? _username;
@@ -109,6 +110,7 @@ class CoreApi with ChangeNotifier {
       : httpClient = ApiHttpClient(
           baseUrl: baseUrl,
         ) {
+    checkHealth();
     init();
   }
 
@@ -120,19 +122,31 @@ class CoreApi with ChangeNotifier {
     return _username!;
   }
 
-  Future<void> init() async {
-    isLoading = true;
+  Future<void> checkHealth() async {
+    isCheckingHealth = true;
     notifyListeners();
     // Check if server is up
     await httpClient.health();
-    await readFromSecureStorage();
+    isCheckingHealth = false;
+    notifyListeners();
+  }
+
+  Future<void> _checkCorrectUser() async {
     if (isLoggedIn) {
       final user = await getMe();
       if (user.username != _username) {
         clearSecureStorage();
+        notifyListeners();
       }
     }
-    isLoading = false;
+  }
+
+  Future<void> init() async {
+    isLoadingLocal = true;
+    notifyListeners();
+    await readFromSecureStorage();
+    _checkCorrectUser();
+    isLoadingLocal = false;
     notifyListeners();
   }
 
@@ -343,7 +357,7 @@ class CoreApi with ChangeNotifier {
     _username = null;
     _publicKey = null;
     _privateKey = null;
-    isLoading = false;
+    isLoadingLocal = false;
     clearSecureStorage();
     notifyListeners();
     await httpClient.logout(
