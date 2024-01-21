@@ -42,7 +42,8 @@ type AndroidOutputMetadata = {
 
 async function getData() {
   const res = await fetch(
-    "https://prijindal-github-builds.s3.amazonaws.com/prijindal/camouflage/main/android/output-metadata.json"
+    "https://prijindal-github-builds.s3.amazonaws.com/prijindal/camouflage/main/android/output-metadata.json",
+    { next: { revalidate: 600 } } // 600 seconds = 10 minutes
   );
   // The return value is *not* serialized
   // You can return Date, Map, Set, etc.
