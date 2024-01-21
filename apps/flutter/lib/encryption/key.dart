@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter/foundation.dart';
 
 import '../helpers/constants.dart';
 
@@ -60,8 +60,8 @@ Future<SecretKey> getSharedKey({
   return sharedSecretKey;
 }
 
-final encryptionAlgorithm = AesCbc.with256bits(macAlgorithm: Hmac.sha256());
 Future<Uint8List> encryptMessage(SecretKey secretKey, String message) async {
+  final encryptionAlgorithm = AesCbc.with256bits(macAlgorithm: Hmac.sha256());
   final secretBox = await encryptionAlgorithm.encrypt(
     message.codeUnits,
     secretKey: secretKey,
@@ -69,15 +69,35 @@ Future<Uint8List> encryptMessage(SecretKey secretKey, String message) async {
   return secretBox.concatenation();
 }
 
+class DecryptMessageParams {
+  SecretKey secretKey;
+  Uint8List payload;
+
+  DecryptMessageParams({
+    required this.secretKey,
+    required this.payload,
+  });
+}
+
 Future<String> decryptMessage(SecretKey secretKey, Uint8List payload) async {
-  final secretBox = SecretBox.fromConcatenation(
-    payload,
-    nonceLength: 16,
-    macLength: encryptionAlgorithm.macAlgorithm.macLength,
+  return await compute<DecryptMessageParams, String>(
+    (message) async {
+      final encryptionAlgorithm =
+          AesCbc.with256bits(macAlgorithm: Hmac.sha256());
+      final secretBox = SecretBox.fromConcatenation(
+        payload,
+        nonceLength: 16,
+        macLength: encryptionAlgorithm.macAlgorithm.macLength,
+      );
+      final unencrypted = await encryptionAlgorithm.decrypt(
+        secretBox,
+        secretKey: secretKey,
+      );
+      return String.fromCharCodes(unencrypted);
+    },
+    DecryptMessageParams(
+      payload: payload,
+      secretKey: secretKey,
+    ),
   );
-  final unencrypted = await encryptionAlgorithm.decrypt(
-    secretBox,
-    secretKey: secretKey,
-  );
-  return String.fromCharCodes(unencrypted);
 }

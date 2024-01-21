@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../api/api.dart';
 import '../api/http.dart';
+import '../helpers/logger.dart';
 import '../models/core.dart';
 import '../models/drift.dart';
 import '../models/message.dart';
@@ -61,24 +62,26 @@ class _ChatMessagesListState extends State<ChatMessagesList>
         .watch()
         .listen((event) async {
       final coreApi = Provider.of<CoreApi>(context, listen: false);
-      final List<DisplayMessage> messages = [];
-      for (var element in event) {
-        final parsed = await coreApi.decryptMessageData(
-          element,
-          widget.user.publicKey,
-        );
-        messages.add(
-          DisplayMessage(
-            direction: element.direction,
-            type: parsed.type,
-            body: parsed.body,
-            sentAt: element.sentAt,
-            receivedAt: element.receivedAt,
-            readAt: element.readAt,
-          ),
-        );
-        unawaited(_markRead(element));
-      }
+      AppLogger.instance.d("Loaded messages");
+      final List<DisplayMessage> messages = await Future.wait<DisplayMessage>(
+        event.map(
+          (element) async {
+            unawaited(_markRead(element));
+            final parsed = await coreApi.decryptMessageData(
+              element,
+              widget.user.publicKey,
+            );
+            return DisplayMessage(
+              direction: element.direction,
+              type: parsed.type,
+              body: parsed.body,
+              sentAt: element.sentAt,
+              receivedAt: element.receivedAt,
+              readAt: element.readAt,
+            );
+          },
+        ),
+      );
       setState(() {
         _messages = messages;
       });

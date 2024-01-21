@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
 
 import '../encryption/key.dart';
+import '../helpers/decryption.dart';
 import '../helpers/logger.dart';
 import '../models/core.dart';
 import '../models/drift.dart';
@@ -67,26 +68,6 @@ Future<void> onReadHandlerOnDb(ReceivedMessagePayload payload) async {
   }
 }
 
-Future<ParsedMessage> decryptMessageDataHandler({
-  required Uint8List encryptedPayload,
-  required String remotePublicKey,
-  required String publicKey,
-  required String privateKey,
-}) async {
-  final sharedKey = await getSharedKey(
-    publicKey: publicKey,
-    privateKey: privateKey,
-    remotePublicKeyString: remotePublicKey,
-  );
-  final unencrypted = await decryptMessage(
-    sharedKey,
-    encryptedPayload,
-  );
-  return ParsedMessage.fromJson(
-    jsonDecode(unencrypted) as Map<String, dynamic>,
-  );
-}
-
 const flutterSecureStorage = FlutterSecureStorage();
 
 Future<String?> getCachedPublicKey(String username) async {
@@ -121,6 +102,22 @@ class CoreApi with ChangeNotifier {
       throw Error();
     }
     return _username!;
+  }
+
+  String get publicKey {
+    if (_publicKey == null) {
+      AppLogger.instance.e("Public Key not found");
+      throw Error();
+    }
+    return _publicKey!;
+  }
+
+  String get privateKey {
+    if (_privateKey == null) {
+      AppLogger.instance.e("Private Key not found");
+      throw Error();
+    }
+    return _privateKey!;
   }
 
   Future<void> checkHealth() async {
@@ -237,6 +234,7 @@ class CoreApi with ChangeNotifier {
     String remotePublicKey,
   ) async {
     return decryptMessageDataHandler(
+      messageId: message.id,
       encryptedPayload: message.encryptedPayload,
       remotePublicKey: remotePublicKey,
       publicKey: _publicKey!,

@@ -7,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../api/api.dart';
 import '../models/message.dart';
 import '../models/payloads.dart';
+import 'decryption.dart';
 import 'local_notifications.dart';
 import 'logger.dart';
 
@@ -32,6 +33,7 @@ Future<void> remoteMessageHandler(RemoteMessage message) async {
       userPublicKey != null &&
       message.notification != null) {
     final decryptedMessage = await decryptMessageDataHandler(
+      messageId: payload.messageId,
       encryptedPayload: base64Decode(payload.encryptedPayload),
       remotePublicKey: userPublicKey,
       publicKey: publicKey,
