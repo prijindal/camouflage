@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -15,7 +16,7 @@ Future<void> _remoteOnChatHandler(ChatMessagePayload payload) async {
 
 Future<void> remoteMessageHandler(RemoteMessage message) async {
   final payload = ChatMessagePayload.fromJson(message.data);
-  _remoteOnChatHandler(payload);
+  unawaited(_remoteOnChatHandler(payload));
 
   final publicKey = await flutterSecureStorage.read(key: "publicKey");
   final privateKey = await flutterSecureStorage.read(key: "privateKey");
@@ -49,7 +50,7 @@ Future<void> remoteMessageHandler(RemoteMessage message) async {
         ? String.fromCharCodes(decryptedMessage.body)
         : null;
 
-    flutterLocalNotificationsPlugin.show(
+    await flutterLocalNotificationsPlugin.show(
       message.notification.hashCode,
       payload.username,
       body,

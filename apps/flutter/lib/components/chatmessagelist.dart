@@ -77,7 +77,7 @@ class _ChatMessagesListState extends State<ChatMessagesList>
             readAt: element.readAt,
           ),
         );
-        _markRead(element);
+        unawaited(_markRead(element));
       }
       setState(() {
         _messages = messages;

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
@@ -135,7 +136,7 @@ class CoreApi with ChangeNotifier {
     if (isLoggedIn) {
       final user = await getMe();
       if (user.username != _username) {
-        clearSecureStorage();
+        await clearSecureStorage();
         notifyListeners();
       }
     }
@@ -145,7 +146,7 @@ class CoreApi with ChangeNotifier {
     isLoadingLocal = true;
     notifyListeners();
     await readFromSecureStorage();
-    _checkCorrectUser();
+    unawaited(_checkCorrectUser());
     isLoadingLocal = false;
     notifyListeners();
   }
@@ -188,7 +189,7 @@ class CoreApi with ChangeNotifier {
     _token = response.token;
     _username = response.username;
     _privateKey = base64Encode(privateKeyBytes);
-    writeToSecureStorage();
+    await writeToSecureStorage();
     notifyListeners();
   }
 
@@ -358,7 +359,7 @@ class CoreApi with ChangeNotifier {
     _publicKey = null;
     _privateKey = null;
     isLoadingLocal = false;
-    clearSecureStorage();
+    await clearSecureStorage();
     notifyListeners();
     await httpClient.logout(
       token: _token!,

@@ -26,7 +26,7 @@ class ThemeModeNotifier with ChangeNotifier {
 
   Future<void> setTheme(ThemeMode themeMode) async {
     _themeMode = themeMode;
-    (await SharedPreferences.getInstance()).setInt(
+    await (await SharedPreferences.getInstance()).setInt(
       appThemeMode,
       themeMode.index,
     );

@@ -89,7 +89,7 @@ class _ChatsListState extends State<ChatsList> {
   }
 
   Future<void> _openUserPage(String username) async {
-    Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => UserPage(username: username),
       ),
@@ -132,9 +132,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _init() async {
-    _registerNotificationPermissions();
-    _setupInteractedMessage();
-    _markReceived();
+    await Future.wait([
+      _registerNotificationPermissions(),
+      _setupInteractedMessage(),
+      _markReceived(),
+    ]);
   }
 
   Future<void> _markReceived() async {

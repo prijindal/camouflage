@@ -13,7 +13,7 @@ class _NewChatPageState extends State<NewChatPage> {
   final _usernameController = TextEditingController();
 
   Future<void> _openUserPage(String username) async {
-    Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => UserPage(username: username),
       ),
