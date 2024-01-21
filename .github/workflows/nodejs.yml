@@ -43,16 +43,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ghcr.io/${{ github.repository }}/${{matrix.service}}:${{ github.ref_name }}
-          file: apps/${{matrix.service}}/Dockerfile
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/${{matrix.service}}:${{ github.ref_name }}
-          cache-to: type=inline
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
+          context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/${{ github.repository }}/${{matrix.service}}:${{ github.ref_name }}
