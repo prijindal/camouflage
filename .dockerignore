@@ -1,4 +1,3 @@
-node_modules
 apps/flutter/Dockerfile
 apps/flutter/build
 apps/flutter/.dart_tool

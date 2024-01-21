@@ -15,8 +15,18 @@ jobs:
     strategy:
       matrix:
         service: [api, docs]
+        node-version: [20]
 
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{matrix.node-version}}
+          cache: "npm"
+      - run: npm ci
+      - run: npm run build
+      - run: npm ci --omit=dev
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -29,6 +39,16 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/${{ github.repository }}/${{matrix.service}}:${{ github.ref_name }}
+          file: apps/${{matrix.service}}/Dockerfile
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/${{matrix.service}}:${{ github.ref_name }}
+          cache-to: type=inline
 
       - name: Build and push
         uses: docker/build-push-action@v5
