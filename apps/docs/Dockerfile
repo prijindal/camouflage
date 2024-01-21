@@ -8,4 +8,6 @@ USER node
 
 COPY --chown=node:node . /app
 
-CMD [ "node", "apps/docs/.next/standalone/apps/docs/server.js"]
+WORKDIR /app/apps/docs
+
+CMD [ "npm", "start"]
