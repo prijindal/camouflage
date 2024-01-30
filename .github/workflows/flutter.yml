@@ -83,7 +83,7 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.camouflage.camouflage
-          track: beta
+          track: alpha
           status: completed
           releaseFiles: apps/flutter/build/app/outputs/bundle/release/app-release.aab
           mappingFile: apps/flutter/build/app/outputs/mapping/release/mapping.txt
